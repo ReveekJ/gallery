@@ -114,6 +114,7 @@
               <Select
                 value={member.role as string as SharedSpaceRole}
                 options={[
+                  { label: $t('role_contributor'), value: SharedSpaceRole.Contributor },
                   { label: $t('role_editor'), value: SharedSpaceRole.Editor },
                   { label: $t('role_viewer'), value: SharedSpaceRole.Viewer },
                   ...(isOwner ? [{ label: $t('remove'), value: 'remove' }] : []),

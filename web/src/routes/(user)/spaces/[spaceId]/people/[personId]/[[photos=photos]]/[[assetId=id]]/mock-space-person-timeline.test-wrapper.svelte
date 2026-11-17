@@ -8,7 +8,7 @@
     options?: Record<string, unknown>;
     enableRouting?: boolean;
     spaceId?: string;
-    space?: { id: string; canWrite: boolean };
+    space?: { id: string; canWrite: boolean; canDeleteFromSpace?: boolean };
     grouping?: TimelineGrouping;
     onGroupingChange?: (grouping: TimelineGrouping) => void;
     onTimelineBucketActivate?: (bucket: ActivatableTimelineBucket) => void;

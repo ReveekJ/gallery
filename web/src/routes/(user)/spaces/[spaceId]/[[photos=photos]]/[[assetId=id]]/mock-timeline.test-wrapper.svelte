@@ -13,7 +13,7 @@
     temporalAnchor?: { year: number; month?: number };
     onTemporalAnchorResolved?: () => void;
     withStacked?: boolean;
-    space?: { id: string; canWrite: boolean };
+    space?: { id: string; canWrite: boolean; canDeleteFromSpace?: boolean };
     children?: Snippet;
     [key: string]: unknown;
   }

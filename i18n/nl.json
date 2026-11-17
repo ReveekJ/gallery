@@ -1875,6 +1875,7 @@
   "review_duplicates": "Controleer duplicaten",
   "review_large_files": "Grote bestanden beoordelen",
   "role": "Rol",
+  "role_contributor": "Bijdrager",
   "role_editor": "Bewerker",
   "role_viewer": "Bekijker",
   "rotate_api_key_prompt": "Weet je zeker dat je deze API-sleutel wilt roteren? De huidige sleutel zal direct stoppen te werken.",

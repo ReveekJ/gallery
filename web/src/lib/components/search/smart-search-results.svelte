@@ -15,7 +15,7 @@
     */
     albumIds?: string[];
     /** Shared-space surface + the caller's write capability on it — see `Timeline` (#889). */
-    space?: { id: string; canWrite: boolean };
+    space?: { id: string; canWrite: boolean; canDeleteFromSpace?: boolean };
     withSharedSpaces?: boolean;
     language?: string;
     isShared: boolean;

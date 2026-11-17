@@ -1,7 +1,13 @@
 import { animateRemoval } from '#lib/gallery/motion/index.ts';
 import { TimelineManager } from '#lib/managers/timeline-manager/timeline-manager.svelte.ts';
 import type { TimelineAsset } from '#lib/managers/timeline-manager/types.ts';
-import { AssetVisibility, deleteAssets as deleteBulk, restoreAssets, type StackResponseDto } from '@immich/sdk';
+import {
+  AssetVisibility,
+  deleteAssets as deleteBulk,
+  restoreAssets,
+  trashAssets,
+  type StackResponseDto,
+} from '@immich/sdk';
 import { toastManager } from '@immich/ui';
 import { t } from 'svelte-i18n';
 import { get } from 'svelte/store';
@@ -21,11 +27,19 @@ export const deleteAssets = async (
   onAssetDelete: OnDelete,
   assets: TimelineAsset[],
   onUndoDelete: OnUndoDelete | undefined = undefined,
+  spaceId: string | undefined = undefined,
 ) => {
   const $t = get(t);
   try {
     const ids = assets.map((a) => a.id);
-    await deleteBulk({ assetBulkDeleteDto: { ids, force } });
+    if (spaceId) {
+      if (force) {
+        throw new Error('Space assets can only be moved to trash');
+      }
+      await trashAssets({ id: spaceId, sharedSpaceAssetTrashDto: { assetIds: ids } });
+    } else {
+      await deleteBulk({ assetBulkDeleteDto: { ids, force } });
+    }
     animateRemoval(ids, force ? 'delete' : 'trash');
     onAssetDelete(ids);
 

@@ -3870,6 +3870,7 @@ describe('commands provider', () => {
       isOwner: true,
       isMember: false,
       canWrite: true,
+      canDeleteFromSpace: true,
       raw: { id: 'space-1', name: 'Shared', createdById: 'test-user' } as unknown as SharedSpaceResponseDto,
       members: [],
     });

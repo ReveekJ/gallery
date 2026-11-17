@@ -31,6 +31,7 @@ export interface SpaceContext {
   isOwner: boolean;
   isMember: boolean;
   canWrite: boolean;
+  canDeleteFromSpace: boolean;
   addPhotosToCurrentSpace?: () => void;
   /** Original DTO. */
   raw: SharedSpaceResponseDto;
@@ -253,7 +254,9 @@ export function registerSpaceContext(
     const self = members.find((m) => m.userId === currentUserId);
     const role = self?.role as unknown as SharedSpaceRole | undefined;
     const isOwner = currentUserId !== null && currentUserId === space.createdById;
-    const canWrite = role === SharedSpaceRole.Owner || role === SharedSpaceRole.Editor;
+    const canWrite =
+      role === SharedSpaceRole.Owner || role === SharedSpaceRole.Contributor || role === SharedSpaceRole.Editor;
+    const canDeleteFromSpace = role === SharedSpaceRole.Owner || role === SharedSpaceRole.Contributor;
     commandContextManager.setSpace({
       id: space.id,
       name: space.name,
@@ -261,6 +264,7 @@ export function registerSpaceContext(
       isOwner,
       isMember: self !== undefined,
       canWrite,
+      canDeleteFromSpace,
       addPhotosToCurrentSpace: options.getAddPhotosToCurrentSpace?.(),
       raw: space,
       members,

@@ -59,6 +59,7 @@ import {
   SharedSpaceAssetAddDto,
   SharedSpaceAssetLinkedAlbumDto,
   SharedSpaceAssetRemoveDto,
+  SharedSpaceAssetTrashDto,
   SharedSpaceCreateDto,
   SharedSpaceLibraryLinkDto,
   SharedSpaceLibraryParamDto,
@@ -326,6 +327,21 @@ export class SharedSpaceController {
     @Body() dto: SharedSpaceAssetRemoveDto,
   ): Promise<string[]> {
     return this.service.removeAssets(auth, id, dto);
+  }
+
+  @Delete(':id/assets/trash')
+  @Authenticated({ permission: Permission.SharedSpaceAssetTrash })
+  @Endpoint({
+    summary: 'Move shared space assets to trash',
+    description: 'Move assets visible in a shared space to the global asset trash. This removes them from all spaces.',
+    history: new HistoryBuilder().added('v1').beta('v1'),
+  })
+  trashAssets(
+    @Auth() auth: AuthDto,
+    @Param() { id }: UUIDParamDto,
+    @Body() dto: SharedSpaceAssetTrashDto,
+  ): Promise<void> {
+    return this.service.trashAssets(auth, id, dto);
   }
 
   @Post(':id/assets/linked-albums')

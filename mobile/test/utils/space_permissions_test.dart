@@ -104,11 +104,46 @@ void main() {
   });
 
   group('roleIsWritable', () {
-    test('owner and editor are writable; viewer and null are not', () {
+    test('owner, editor and contributor are writable; viewer and null are not', () {
       expect(roleIsWritable(SharedSpaceRole.owner), isTrue);
       expect(roleIsWritable(SharedSpaceRole.editor), isTrue);
+      expect(roleIsWritable(SharedSpaceRole.contributor), isTrue);
       expect(roleIsWritable(SharedSpaceRole.viewer), isFalse);
       expect(roleIsWritable(null), isFalse);
+    });
+  });
+
+  group('spaceCanTrashAssets / roleCanTrashAssets', () {
+    test('the creator can trash even when absent from the members list', () {
+      final space = _space(createdById: 'me', members: Optional.present([_member('someone', SharedSpaceRole.viewer)]));
+
+      expect(spaceCanTrashAssets(space, 'me'), isTrue);
+    });
+
+    test('owner and contributor can trash; editor and viewer cannot', () {
+      SharedSpaceResponseDto spaceWith(SharedSpaceRole role) =>
+          _space(members: Optional.present([_member('me', role)]));
+
+      expect(spaceCanTrashAssets(spaceWith(SharedSpaceRole.owner), 'me'), isTrue);
+      expect(spaceCanTrashAssets(spaceWith(SharedSpaceRole.contributor), 'me'), isTrue);
+      expect(spaceCanTrashAssets(spaceWith(SharedSpaceRole.editor), 'me'), isFalse,
+          reason: 'editor can only unlink from the space, not delete from disk');
+      expect(spaceCanTrashAssets(spaceWith(SharedSpaceRole.viewer), 'me'), isFalse);
+    });
+
+    test('a null current user or non-member cannot trash', () {
+      final space = _space(members: Optional.present([_member('other', SharedSpaceRole.owner)]));
+
+      expect(spaceCanTrashAssets(space, null), isFalse);
+      expect(spaceCanTrashAssets(space, 'me'), isFalse);
+    });
+
+    test('roleCanTrashAssets mirrors the DTO predicate', () {
+      expect(roleCanTrashAssets(SharedSpaceRole.owner), isTrue);
+      expect(roleCanTrashAssets(SharedSpaceRole.contributor), isTrue);
+      expect(roleCanTrashAssets(SharedSpaceRole.editor), isFalse);
+      expect(roleCanTrashAssets(SharedSpaceRole.viewer), isFalse);
+      expect(roleCanTrashAssets(null), isFalse);
     });
   });
 }

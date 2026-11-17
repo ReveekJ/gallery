@@ -1875,6 +1875,7 @@
   "review_duplicates": "Duplikate überprüfen",
   "review_large_files": "Große Dateien überprüfen",
   "role": "Rolle",
+  "role_contributor": "Beitragender",
   "role_editor": "Bearbeiter",
   "role_viewer": "Betrachter",
   "rotate_api_key_prompt": "Bist du sicher, dass du diesen API Key erneuern willst? Der aktuelle Key wird sofort aufhören zu funktionieren.",

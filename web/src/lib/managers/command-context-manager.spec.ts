@@ -88,6 +88,7 @@ describe('CommandContextManager', () => {
       isOwner: true,
       isMember: true,
       canWrite: true,
+      canDeleteFromSpace: true,
       raw: { id: 's1' } as unknown as SharedSpaceResponseDto,
       members: [],
     });

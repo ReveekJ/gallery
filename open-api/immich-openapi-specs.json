@@ -20893,6 +20893,66 @@
         "x-immich-state": "Beta"
       }
     },
+    "/shared-spaces/{id}/assets/trash": {
+      "delete": {
+        "description": "Move assets visible in a shared space to the global asset trash. This removes them from all spaces.",
+        "operationId": "trashAssets",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SharedSpaceAssetTrashDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          },
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Move shared space assets to trash",
+        "tags": [
+          "Shared Spaces"
+        ],
+        "x-immich-history": [
+          {
+            "version": "v1",
+            "state": "Added"
+          },
+          {
+            "version": "v1",
+            "state": "Beta"
+          }
+        ],
+        "x-immich-permission": "sharedSpaceAsset.trash",
+        "x-immich-state": "Beta"
+      }
+    },
     "/shared-spaces/{id}/assets/{assetId}/faces": {
       "get": {
         "description": "Retrieve the face boxes on an asset for a shared space, joined to the space person holding each one, if any.",
@@ -39409,6 +39469,7 @@
           "sharedSpaceAsset.create",
           "sharedSpaceAsset.read",
           "sharedSpaceAsset.delete",
+          "sharedSpaceAsset.trash",
           "sharedSpaceLibrary.create",
           "sharedSpaceLibrary.delete",
           "sharedSpaceAlbum.create",
@@ -43916,6 +43977,24 @@
         ],
         "type": "object"
       },
+      "SharedSpaceAssetTrashDto": {
+        "properties": {
+          "assetIds": {
+            "description": "Asset IDs",
+            "items": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+              "type": "string"
+            },
+            "maxItems": 50000,
+            "type": "array"
+          }
+        },
+        "required": [
+          "assetIds"
+        ],
+        "type": "object"
+      },
       "SharedSpaceCreateDto": {
         "properties": {
           "color": {
@@ -44644,6 +44723,7 @@
       "SharedSpaceRole": {
         "enum": [
           "owner",
+          "contributor",
           "editor",
           "viewer"
         ],

@@ -14,16 +14,17 @@
     onUndoDelete?: OnUndoDelete | undefined;
     menuItem?: boolean;
     force?: boolean;
+    spaceId?: string;
   };
 
-  let { onAssetDelete, onUndoDelete = undefined, menuItem = false, force: forceRequested }: Props = $props();
+  let { onAssetDelete, onUndoDelete = undefined, menuItem = false, force: forceRequested, spaceId }: Props = $props();
 
-  const force = $derived(forceRequested || !featureFlagsManager.value.trash);
+  const force = $derived(spaceId ? false : forceRequested || !featureFlagsManager.value.trash);
   let label = $derived(force ? $t('permanently_delete') : $t('delete'));
   let loading = $state(false);
 
   const onAction = async () => {
-    const assets = assetMultiSelectManager.ownedAssets;
+    const assets = spaceId ? assetMultiSelectManager.assets : assetMultiSelectManager.ownedAssets;
 
     if (force && $showDeleteModal) {
       const confirmed = await modalManager.show(AssetDeleteConfirmModal, { size: assets.length });
@@ -33,7 +34,7 @@
     }
 
     loading = true;
-    await deleteAssets(force, onAssetDelete, assets, onUndoDelete);
+    await deleteAssets(force, onAssetDelete, assets, onUndoDelete, spaceId);
     assetMultiSelectManager.clear();
     loading = false;
   };

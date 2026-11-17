@@ -1875,6 +1875,7 @@
   "review_duplicates": "Przejrzyj duplikaty",
   "review_large_files": "Przejrzyj duże pliki",
   "role": "Rola",
+  "role_contributor": "Współtwórca",
   "role_editor": "Edytor",
   "role_viewer": "Widz",
   "rotate_api_key_prompt": "Czy na pewno chcesz wymienić ten klucz API? Obecny klucz natychmiast przestanie działać.",

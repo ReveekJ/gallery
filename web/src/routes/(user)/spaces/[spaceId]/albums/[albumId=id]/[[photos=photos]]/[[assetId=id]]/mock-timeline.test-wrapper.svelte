@@ -11,7 +11,7 @@
     singleSelect?: boolean;
     assetInteraction?: unknown;
     timelineManager?: Record<string, unknown>;
-    space?: { id: string; canWrite: boolean };
+    space?: { id: string; canWrite: boolean; canDeleteFromSpace?: boolean };
     grouping?: TimelineGrouping;
     onGroupingChange?: (grouping: TimelineGrouping) => void;
     onTimelineBucketActivate?: (bucket: ActivatableTimelineBucket) => void;

@@ -1875,6 +1875,7 @@
   "review_duplicates": "Consulter les doublons",
   "review_large_files": "Consulter les fichiers volumineux",
   "role": "Rôle",
+  "role_contributor": "Contributeur",
   "role_editor": "Éditeur",
   "role_viewer": "Visionneur",
   "rotate_api_key_prompt": "Voulez-vous vraiment renouveler cette clé API ? La clé actuelle arrêtera immédiatement de fonctionner.",

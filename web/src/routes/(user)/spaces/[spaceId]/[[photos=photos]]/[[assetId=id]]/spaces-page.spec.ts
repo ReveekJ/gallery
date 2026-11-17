@@ -1145,7 +1145,7 @@ describe('Spaces page search URL state', () => {
 
     await expect
       .element(page.getByTestId('timeline-space'))
-      .toHaveTextContent(JSON.stringify({ id: 'space-1', canWrite: true }));
+      .toHaveTextContent(JSON.stringify({ id: 'space-1', canWrite: true, canDeleteFromSpace: false }));
   });
 
   it('passes the space capability into the space Timeline as read-only for a viewer', async () => {
@@ -1155,7 +1155,7 @@ describe('Spaces page search URL state', () => {
 
     await expect
       .element(page.getByTestId('timeline-space'))
-      .toHaveTextContent(JSON.stringify({ id: 'space-1', canWrite: false }));
+      .toHaveTextContent(JSON.stringify({ id: 'space-1', canWrite: false, canDeleteFromSpace: false }));
   });
 
   // D2 — the picked year/month is IN the URL codec. It used to be transient, which meant a shared

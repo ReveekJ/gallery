@@ -78,7 +78,12 @@
   const currentMember = $derived(members.find((m) => m.userId === authManager.user.id));
   const isOwner = $derived(currentMember?.role === SharedSpaceRole.Owner);
   const isEditor = $derived(
-    currentMember?.role === SharedSpaceRole.Owner || currentMember?.role === SharedSpaceRole.Editor,
+    currentMember?.role === SharedSpaceRole.Owner ||
+      currentMember?.role === SharedSpaceRole.Contributor ||
+      currentMember?.role === SharedSpaceRole.Editor,
+  );
+  const canDeleteFromSpace = $derived(
+    currentMember?.role === SharedSpaceRole.Owner || currentMember?.role === SharedSpaceRole.Contributor,
   );
 
   registerSpaceContext(
@@ -324,7 +329,7 @@
     {isSelectionMode}
     onEscape={handleEscape}
     spaceId={space.id}
-    space={{ id: space.id, canWrite: isEditor }}
+    space={{ id: space.id, canWrite: isEditor, canDeleteFromSpace }}
     {...filtered.timelineProps}
     onScroll={handleSurfaceScroll}
   >
@@ -364,7 +369,7 @@
       timelineManager={filtered.showSearchResults ? undefined : timelineManager}
       assetInteraction={assetMultiSelectManager}
       onSelectAll={filtered.onSelectAll}
-      space={{ id: space.id, canWrite: isEditor, members }}
+      space={{ id: space.id, canWrite: isEditor, canDeleteFromSpace, members }}
       onRemove={handleRemoveAssets}
       onSetCover={handleSetAsCover}
       onFavorite={filtered.onFavorite}

@@ -59,8 +59,8 @@ This page names the major Gallery concepts, so a discussion can start in product
 | **Partner sharing**            | One-way library sharing from one user to another.                                                                 | Shared library, partner album |
 | **Shared link**                | A public or key-protected access path to selected assets or an album.                                             | Public share, link share      |
 | **Shared Space**               | A collaborative virtual library where members browse and contribute assets under role-based access.               | Space, shared library         |
-| **Space member**               | A user who belongs to a Shared Space with an Owner, Editor, or Viewer role.                                       | Participant, collaborator     |
-| **Space role**                 | The permission tier for a Space member: Owner, Editor, or Viewer.                                                 | Space permission              |
+| **Space member**               | A user who belongs to a Shared Space with an Owner, Contributor, Editor, or Viewer role.                          | Participant, collaborator     |
+| **Space role**                 | The permission tier for a Space member: Owner, Contributor, Editor, or Viewer.                                    | Space permission              |
 | **Space asset**                | An asset visible inside a Shared Space, either directly linked or included through a linked library.              | Space photo                   |
 | **Direct space asset**         | An asset explicitly linked into a Shared Space through the space-asset join.                                      | Added photo                   |
 | **Library-linked space asset** | An asset included in a Shared Space because its library is linked to that space.                                  | Auto-added photo              |

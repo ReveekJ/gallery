@@ -37,6 +37,7 @@ import {
   SharedSpaceAssetAddDto,
   SharedSpaceAssetLinkedAlbumDto,
   SharedSpaceAssetRemoveDto,
+  SharedSpaceAssetTrashDto,
   SharedSpaceCreateDto,
   SharedSpaceLibraryLinkDto,
   SharedSpaceLinkedAlbumDto,
@@ -52,6 +53,7 @@ import {
   SharedSpaceUpdateDto,
 } from 'src/dtos/shared-space.dto.js';
 import {
+  AssetStatus,
   AssetType,
   AssetVisibility,
   CacheControl,
@@ -103,10 +105,11 @@ import { transformFaceBoundingBox } from 'src/utils/transform.js';
 const ROLE_HIERARCHY: Record<SharedSpaceRole, number> = {
   [SharedSpaceRole.Viewer]: 0,
   [SharedSpaceRole.Editor]: 1,
-  [SharedSpaceRole.Owner]: 2,
+  [SharedSpaceRole.Contributor]: 2,
+  [SharedSpaceRole.Owner]: 3,
 };
 
-const getSharedSpaceRoleScore = (role: string) => ROLE_HIERARCHY[role as SharedSpaceRole] ?? 0;
+const getSharedSpaceRoleScore = (role: string) => ROLE_HIERARCHY[role as SharedSpaceRole] ?? -1;
 const getMetadataSourceScore = (sourceProfileType?: string | null) => (sourceProfileType === 'user-person' ? 1 : 0);
 
 /** nameSource collapse precedence: a manually-set name wins over an inherited/auto/empty one. */
@@ -1660,6 +1663,26 @@ export class SharedSpaceService extends BaseService {
     }
 
     return removedAssetIds;
+  }
+
+  async trashAssets(auth: AuthDto, spaceId: string, dto: SharedSpaceAssetTrashDto): Promise<void> {
+    await this.requireRole(auth, spaceId, SharedSpaceRole.Contributor);
+
+    const spaceAssets = await this.sharedSpaceRepository.getAssetIdsInSpace(spaceId);
+    const visibleAssetIds = new Set(spaceAssets.map(({ assetId }) => assetId));
+    const assetIds = [...new Set(dto.assetIds)];
+    if (assetIds.some((assetId) => !visibleAssetIds.has(assetId))) {
+      throw new BadRequestException('One or more assets are not visible in this space');
+    }
+
+    await this.assetRepository.updateAll(assetIds, {
+      deletedAt: new Date(),
+      status: AssetStatus.Trashed,
+    });
+    await this.eventRepository.emit('AssetTrashAll', {
+      assetIds,
+      userId: auth.user.id,
+    });
   }
 
   /**
@@ -4584,7 +4607,7 @@ export class SharedSpaceService extends BaseService {
 
   private async requireRole(auth: AuthDto, spaceId: string, minimumRole: SharedSpaceRole) {
     const member = await this.requireMembership(auth, spaceId);
-    if (ROLE_HIERARCHY[member.role as SharedSpaceRole] < ROLE_HIERARCHY[minimumRole]) {
+    if (getSharedSpaceRoleScore(member.role) < ROLE_HIERARCHY[minimumRole]) {
       throw new ForbiddenException('Insufficient role');
     }
     return member;

@@ -72,6 +72,7 @@ const makeSpace = (overrides: Partial<SpaceContext> = {}): SpaceContext => ({
   isOwner: false,
   isMember: true,
   canWrite: false,
+  canDeleteFromSpace: false,
   raw: {} as unknown as SharedSpaceResponseDto,
   members: [],
   ...overrides,
@@ -101,6 +102,7 @@ const ALL_FALSE: SelectionCapabilities = {
   canSetCover: false,
   canRemoveFromAlbum: false,
   canRemoveFromSpace: false,
+  canTrashFromSpace: false,
   shareScopedToSpace: false,
 };
 
@@ -143,6 +145,7 @@ describe('getSelectionCapabilities — space timeline (direct space)', () => {
       canSetCover: true,
       canRemoveFromAlbum: false,
       canRemoveFromSpace: true,
+      canTrashFromSpace: false,
       // Everything is mine, so nothing needs the space to be shareable.
       shareScopedToSpace: false,
       // Everything is mine, so the picker offers every album and space.
@@ -173,6 +176,7 @@ describe('getSelectionCapabilities — space timeline (direct space)', () => {
       canSetCover: true,
       canRemoveFromAlbum: false,
       canRemoveFromSpace: true,
+      canTrashFromSpace: false,
     });
   });
 
@@ -403,6 +407,7 @@ describe('getSelectionCapabilities — cross-cutting edge cases', () => {
       canSetCover: true,
       canRemoveFromAlbum: true,
       canRemoveFromSpace: false,
+      canTrashFromSpace: false,
       // No space is involved, so nothing needs to be scoped to one.
       shareScopedToSpace: false,
     });

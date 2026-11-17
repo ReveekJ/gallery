@@ -315,6 +315,12 @@ const SharedSpaceAssetRemoveSchema = z
   })
   .meta({ id: 'SharedSpaceAssetRemoveDto' });
 
+const SharedSpaceAssetTrashSchema = z
+  .object({
+    assetIds: z.array(z.uuidv4()).max(MAX_SPACE_ASSETS_PER_REQUEST).describe('Asset IDs'),
+  })
+  .meta({ id: 'SharedSpaceAssetTrashDto' });
+
 // A linked album that projects a given asset into the space. Used to explain to the client why an
 // asset can't be removed from the space directly (it's present via a linked album — remove it there).
 const SharedSpaceAssetLinkedAlbumSchema = z
@@ -376,6 +382,7 @@ export class SharedSpaceLibraryParamDto extends createZodDto(SharedSpaceLibraryP
 export class SharedSpaceLinkedAlbumDto extends createZodDto(SharedSpaceLinkedAlbumSchema) {}
 export class SharedSpaceAssetAddDto extends createZodDto(SharedSpaceAssetAddSchema) {}
 export class SharedSpaceAssetRemoveDto extends createZodDto(SharedSpaceAssetRemoveSchema) {}
+export class SharedSpaceAssetTrashDto extends createZodDto(SharedSpaceAssetTrashSchema) {}
 export class SharedSpaceAssetLinkedAlbumDto extends createZodDto(SharedSpaceAssetLinkedAlbumSchema) {}
 export class SharedSpaceActivityQueryDto extends createZodDto(SharedSpaceActivityQuerySchema) {}
 export class SharedSpaceActivityResponseDto extends createZodDto(SharedSpaceActivityResponseSchema) {}

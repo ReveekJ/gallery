@@ -122,6 +122,7 @@ const makeWritableSpaceContext = (): NonNullable<CommandContext['space']> => ({
   isOwner: true,
   isMember: true,
   canWrite: true,
+  canDeleteFromSpace: true,
   raw: { id: 'space-1', name: 'Writable Space', createdById: 'u-me' } as never,
   members: [],
 });

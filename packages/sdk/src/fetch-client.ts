@@ -4593,6 +4593,10 @@ export type SharedSpaceAssetLinkedAlbumDto = {
     /** Album name */
     albumName: string;
 };
+export type SharedSpaceAssetTrashDto = {
+    /** Asset IDs */
+    assetIds: string[];
+};
 export type SpaceAssetFaceResponseDto = {
     /** Bounding box X1 */
     boundingBoxX1: number;
@@ -10546,6 +10550,19 @@ export function getSharedSpaceAssetLinkedAlbums({ id, sharedSpaceAssetRemoveDto 
     })));
 }
 /**
+ * Move shared space assets to trash
+ */
+export function trashAssets({ id, sharedSpaceAssetTrashDto }: {
+    id: string;
+    sharedSpaceAssetTrashDto: SharedSpaceAssetTrashDto;
+}, opts?: Oazapfts.RequestOpts) {
+    return oazapfts.ok(oazapfts.fetchText(`/shared-spaces/${encodeURIComponent(id)}/assets/trash`, oazapfts.json({
+        ...opts,
+        method: "DELETE",
+        body: sharedSpaceAssetTrashDto
+    })));
+}
+/**
  * Get the faces on an asset, space-scoped
  */
 export function getSpaceAssetFaces({ assetId, id }: {
@@ -12729,6 +12746,7 @@ export enum Permission {
     SharedSpaceAssetCreate = "sharedSpaceAsset.create",
     SharedSpaceAssetRead = "sharedSpaceAsset.read",
     SharedSpaceAssetDelete = "sharedSpaceAsset.delete",
+    SharedSpaceAssetTrash = "sharedSpaceAsset.trash",
     SharedSpaceLibraryCreate = "sharedSpaceLibrary.create",
     SharedSpaceLibraryDelete = "sharedSpaceLibrary.delete",
     SharedSpaceAlbumCreate = "sharedSpaceAlbum.create",
@@ -13083,6 +13101,7 @@ export enum AssetIdErrorReason {
 }
 export enum SharedSpaceRole {
     Owner = "owner",
+    Contributor = "contributor",
     Editor = "editor",
     Viewer = "viewer"
 }

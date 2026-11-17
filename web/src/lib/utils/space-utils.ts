@@ -5,7 +5,7 @@ The literal key union rather than `string`, so `$t()` still type-checks these ag
 (`Translations` itself is declared inside `declare module 'svelte-i18n'`, so it cannot be named
 here.)
 */
-export type SpaceRoleLabelKey = 'owner' | 'role_editor' | 'role_viewer';
+export type SpaceRoleLabelKey = 'owner' | 'role_contributor' | 'role_editor' | 'role_viewer';
 
 /**
 i18n key for a member's role in a space.
@@ -21,6 +21,9 @@ export function spaceRoleLabelKey(role: string): SpaceRoleLabelKey {
     }
     case SharedSpaceRole.Editor: {
       return 'role_editor';
+    }
+    case SharedSpaceRole.Contributor: {
+      return 'role_contributor';
     }
     default: {
       return 'role_viewer';

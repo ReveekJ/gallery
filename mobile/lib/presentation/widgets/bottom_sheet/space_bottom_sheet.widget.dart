@@ -3,6 +3,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/constants/enums.dart';
 import 'package:immich_mobile/presentation/actions/action.widget.dart';
 import 'package:immich_mobile/presentation/actions/asset_debug.action.dart';
+import 'package:immich_mobile/presentation/actions/delete_from_space.action.dart';
 import 'package:immich_mobile/presentation/actions/download.action.dart';
 import 'package:immich_mobile/presentation/actions/favorite.action.dart';
 import 'package:immich_mobile/presentation/actions/remove_from_space.action.dart';
@@ -41,6 +42,7 @@ class _SpaceBottomSheetState extends ConsumerState<SpaceBottomSheet> {
   }
 
   bool get _canEdit => roleIsWritable(widget.currentUserRole);
+  bool get _canDelete => roleCanTrashAssets(widget.currentUserRole);
 
   @override
   Widget build(BuildContext context) {
@@ -76,6 +78,15 @@ class _SpaceBottomSheetState extends ConsumerState<SpaceBottomSheet> {
           if (_canEdit)
             ActionColumnButton(
               action: RemoveFromSpaceAction(
+                source: ActionSource.timeline,
+                spaceId: widget.spaceId,
+                onComplete: widget.onAssetsRemoved,
+              ),
+            ),
+          // Contributor and Owner only: moves the assets to the global trash for everyone.
+          if (_canDelete)
+            ActionColumnButton(
+              action: DeleteFromSpaceAction(
                 source: ActionSource.timeline,
                 spaceId: widget.spaceId,
                 onComplete: widget.onAssetsRemoved,

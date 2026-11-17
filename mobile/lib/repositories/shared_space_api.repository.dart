@@ -239,6 +239,15 @@ class SharedSpaceApiRepository extends ApiRepository {
     ];
   }
 
+  /// Move assets visible in [spaceId] to the global trash
+  /// (DELETE /shared-spaces/{id}/assets/trash). Unlike [removeAssets], this
+  /// deletes the asset itself (owner's copy included), not just the space link.
+  /// Server-side gated on the contributor role or above.
+  Future<void> trashAssets(String spaceId, List<String> assetIds) async {
+    final dto = SharedSpaceAssetTrashDto(assetIds: assetIds);
+    await _api.trashAssets(spaceId, dto);
+  }
+
   /// Link an album to a shared space (PUT /shared-spaces/{id}/albums/{albumId}).
   /// SDK arg order is (albumId, id) where id = spaceId.
   ///

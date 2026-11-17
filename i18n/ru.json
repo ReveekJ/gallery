@@ -1875,6 +1875,7 @@
   "review_duplicates": "Разбор дубликатов",
   "review_large_files": "Обзор больших файлов",
   "role": "Роль",
+  "role_contributor": "Участник",
   "role_editor": "Редактор",
   "role_viewer": "Зритель",
   "rotate_api_key_prompt": "Вы хотите сгенерировать новый ключ API? Текущий ключ перестанет работать.",

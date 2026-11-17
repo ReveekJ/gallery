@@ -9,6 +9,7 @@ import {
   AlbumUserRole,
   AssetFileType,
   AssetOrder,
+  AssetStatus,
   AssetType,
   AssetVisibility,
   CacheControl,
@@ -3752,6 +3753,57 @@ describe(SharedSpaceService.name, () => {
       await sut.removeAssets(auth, spaceId, { assetIds: [trashedId] });
 
       expect(mocks.sharedSpace.removeAssets).toHaveBeenCalledWith(spaceId, [trashedId]);
+    });
+  });
+
+  describe('trashAssets', () => {
+    it('should reject editors without mutating assets', async () => {
+      const auth = factory.auth();
+      const spaceId = newUuid();
+      mocks.sharedSpace.getMember.mockResolvedValue(
+        makeMemberResult({ spaceId, userId: auth.user.id, role: SharedSpaceRole.Editor }),
+      );
+
+      await expect(sut.trashAssets(auth, spaceId, { assetIds: [newUuid()] })).rejects.toBeInstanceOf(
+        ForbiddenException,
+      );
+      expect(mocks.asset.updateAll).not.toHaveBeenCalled();
+      expect(mocks.event.emit).not.toHaveBeenCalled();
+    });
+
+    it('should trash all selected assets visible in the space for contributors', async () => {
+      const auth = factory.auth();
+      const spaceId = newUuid();
+      const assetIds = [newUuid(), newUuid()];
+      mocks.sharedSpace.getMember.mockResolvedValue(
+        makeMemberResult({ spaceId, userId: auth.user.id, role: SharedSpaceRole.Contributor }),
+      );
+      mocks.sharedSpace.getAssetIdsInSpace.mockResolvedValue(assetIds.map((assetId) => ({ assetId })));
+
+      await sut.trashAssets(auth, spaceId, { assetIds });
+
+      expect(mocks.asset.updateAll).toHaveBeenCalledWith(
+        assetIds,
+        expect.objectContaining({ status: AssetStatus.Trashed, deletedAt: expect.any(Date) }),
+      );
+      expect(mocks.event.emit).toHaveBeenCalledWith('AssetTrashAll', { assetIds, userId: auth.user.id });
+    });
+
+    it('should validate all assets before trashing any of them', async () => {
+      const auth = factory.auth();
+      const spaceId = newUuid();
+      const visibleAssetId = newUuid();
+      const hiddenAssetId = newUuid();
+      mocks.sharedSpace.getMember.mockResolvedValue(
+        makeMemberResult({ spaceId, userId: auth.user.id, role: SharedSpaceRole.Contributor }),
+      );
+      mocks.sharedSpace.getAssetIdsInSpace.mockResolvedValue([{ assetId: visibleAssetId }]);
+
+      await expect(sut.trashAssets(auth, spaceId, { assetIds: [visibleAssetId, hiddenAssetId] })).rejects.toThrow(
+        'not visible in this space',
+      );
+      expect(mocks.asset.updateAll).not.toHaveBeenCalled();
+      expect(mocks.event.emit).not.toHaveBeenCalled();
     });
   });
 

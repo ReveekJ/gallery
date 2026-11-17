@@ -376,6 +376,7 @@ export enum Permission {
   SharedSpaceAssetCreate = 'sharedSpaceAsset.create',
   SharedSpaceAssetRead = 'sharedSpaceAsset.read',
   SharedSpaceAssetDelete = 'sharedSpaceAsset.delete',
+  SharedSpaceAssetTrash = 'sharedSpaceAsset.trash',
 
   SharedSpaceLibraryCreate = 'sharedSpaceLibrary.create',
   SharedSpaceLibraryDelete = 'sharedSpaceLibrary.delete',

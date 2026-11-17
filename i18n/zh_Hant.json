@@ -1875,6 +1875,7 @@
   "review_duplicates": "檢查重複內容",
   "review_large_files": "檢查大型檔案",
   "role": "角色",
+  "role_contributor": "貢獻者",
   "role_editor": "編輯者",
   "role_viewer": "檢視者",
   "rotate_api_key_prompt": "您確定要輪換此API金鑰嗎？目前的金鑰將會立即失效。",

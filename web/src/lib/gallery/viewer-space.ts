@@ -1,7 +1,7 @@
 import { getContext, setContext } from 'svelte';
 
 /** The shared space an asset viewer is opened on: `spaceId` scopes reads, `space` gates actions (#889). */
-export type ViewerSpace = { spaceId?: string; space?: { id: string; canWrite: boolean } };
+export type ViewerSpace = { spaceId?: string; space?: { id: string; canWrite: boolean; canDeleteFromSpace?: boolean } };
 
 export const viewerSpaceKey = Symbol('gallery-viewer-space');
 

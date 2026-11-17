@@ -22,6 +22,7 @@ class SpaceMembersPage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     String roleLabel(SharedSpaceRole role) => switch (role) {
       SharedSpaceRole.owner => context.t.owner,
+      SharedSpaceRole.contributor => context.t.role_contributor,
       SharedSpaceRole.editor => context.t.role_editor,
       _ => context.t.role_viewer,
     };
@@ -130,6 +131,15 @@ class SpaceMembersPage extends HookConsumerWidget {
                     onTap: () {
                       Navigator.of(ctx).pop();
                       unawaited(updateRole(member, SharedSpaceRole.editor));
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.upload_outlined),
+                    title: Text(ctx.t.role_contributor),
+                    trailing: member.role == SharedSpaceRole.contributor ? const Icon(Icons.check) : null,
+                    onTap: () {
+                      Navigator.of(ctx).pop();
+                      unawaited(updateRole(member, SharedSpaceRole.contributor));
                     },
                   ),
                   ListTile(

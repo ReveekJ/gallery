@@ -63,7 +63,12 @@
     editable-subset fallback (`canEditAsset`'s space derivation) when `POST /assets/editable`
     is unreachable — absent it, the fallback narrows to the owned subset, same as pre-#734.
     */
-    space?: { id: string; canWrite: boolean; members?: SharedSpaceMemberResponseDto[] };
+    space?: {
+      id: string;
+      canWrite: boolean;
+      canDeleteFromSpace?: boolean;
+      members?: SharedSpaceMemberResponseDto[];
+    };
     downloadFilename?: string;
     /** Remove-from-album / remove-from-space result handler. */
     onRemove?: (assetIds: string[]) => void;
@@ -132,6 +137,7 @@
       isOwner: false,
       isMember: true,
       canWrite: space.canWrite,
+      canDeleteFromSpace: space.canDeleteFromSpace ?? false,
       raw: {} as SharedSpaceResponseDto,
       members: space.members ?? [],
     };
@@ -287,8 +293,11 @@
       {#if caps.canRemoveFromAlbum && album}
         <ActionMenuItem action={Actions.RemoveFromAlbum} />
       {/if}
-      {#if caps.canDelete && onAssetDelete}
+      {#if caps.canDelete && !caps.canTrashFromSpace && onAssetDelete}
         <DeleteAssets menuItem {onAssetDelete} {onUndoDelete} />
+      {/if}
+      {#if caps.canTrashFromSpace && space && onAssetDelete}
+        <DeleteAssets menuItem spaceId={space.id} {onAssetDelete} {onUndoDelete} />
       {/if}
     </ButtonContextMenu>
   </AssetSelectControlBar>

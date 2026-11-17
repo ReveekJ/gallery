@@ -49,6 +49,22 @@ bool spaceIsOwned(SharedSpaceResponseDto space, String? currentUserId) {
   return _roleOf(space, currentUserId) == SharedSpaceRole.owner;
 }
 
+/// Whether [currentUserId] may move assets visible in [space] to the global trash.
+bool spaceCanTrashAssets(SharedSpaceResponseDto space, String? currentUserId) {
+  if (currentUserId == null) return false;
+  if (space.createdById == currentUserId) return true;
+  final role = _roleOf(space, currentUserId);
+  return role == SharedSpaceRole.owner || role == SharedSpaceRole.contributor;
+}
+
+/// The role-only overload, for callers holding a resolved [SharedSpaceRole]
+/// rather than a whole DTO (e.g. `SpaceBottomSheet`). Note the asymmetry with
+/// [roleIsWritable]: an editor can add/remove assets but cannot delete them
+/// from disk — that is the contributor's distinguishing capability.
+bool roleCanTrashAssets(SharedSpaceRole? role) =>
+  role == SharedSpaceRole.owner || role == SharedSpaceRole.contributor;
+
 /// The role-only overload, for callers holding a resolved [SharedSpaceRole]
 /// rather than a whole DTO (e.g. `SpaceBottomSheet`).
-bool roleIsWritable(SharedSpaceRole? role) => role == SharedSpaceRole.owner || role == SharedSpaceRole.editor;
+bool roleIsWritable(SharedSpaceRole? role) =>
+  role == SharedSpaceRole.owner || role == SharedSpaceRole.editor || role == SharedSpaceRole.contributor;

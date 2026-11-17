@@ -1874,6 +1874,7 @@
   "review_duplicates": "Revisar duplicados",
   "review_large_files": "Revisar archivos grandes",
   "role": "Rol",
+  "role_contributor": "Colaborador",
   "role_editor": "Editor",
   "role_viewer": "Visor",
   "rotate_api_key_prompt": "¿Está seguro de que desea rotar esta clave API? La clave actual dejará de funcionar inmediatamente.",

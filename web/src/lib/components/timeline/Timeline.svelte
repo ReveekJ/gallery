@@ -62,7 +62,7 @@
     `SelectionToolbar`. Forwarded to the asset viewer so single-photo actions can be gated the
     same way the multi-select bar gates them (#889).
     */
-    space?: { id: string; canWrite: boolean };
+    space?: { id: string; canWrite: boolean; canDeleteFromSpace?: boolean };
     onSelect?: (asset: TimelineAsset) => void;
     onEscape?: () => void;
     onScroll?: (scrollTop: number) => void;

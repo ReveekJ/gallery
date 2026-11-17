@@ -2231,6 +2231,21 @@ export class SharedSpaceRepository {
               .where('asset.isOffline', '=', false)
               .where('asset.visibility', 'in', visibleSpaceAssetVisibilities),
           )
+          .union(
+            this.db
+              .selectFrom('asset')
+              .select('asset.id')
+              .where((eb) =>
+                spaceAlbumAssetExists(eb, {
+                  correlateAssetId: 'asset.id',
+                  scope: { spaceId },
+                  albumTimelineGate: 'none',
+                }),
+              )
+              .where('asset.deletedAt', 'is', null)
+              .where('asset.isOffline', '=', false)
+              .where('asset.visibility', 'in', visibleSpaceAssetVisibilities),
+          )
           .as('combined'),
       )
       .innerJoin('asset', 'asset.id', 'combined.id')

@@ -3,13 +3,13 @@
 Shared Spaces are virtual libraries that several people browse and add to together. [Partner Sharing](partner-sharing.md) hands over your whole library, one way. A Shared Space is narrower: you choose what goes in, and every member gets a role that decides what they can do with it.
 
 :::info Permissions Model
-Gallery checks the caller's role on every endpoint. The three roles (Owner, Editor and Viewer) decide what a member can do with assets, search, downloads, people and the space's own settings.
+Gallery checks the caller's role on every endpoint. The four roles (Owner, Contributor, Editor and Viewer) decide what a member can do with assets, search, downloads, people and the space's own settings.
 :::
 
 ## Key Features
 
 - **Reference-based sharing.** Photos are linked into a space rather than copied, so a space costs no extra storage.
-- **Role-based access.** Owner, Editor and Viewer, each with different permissions.
+- **Role-based access.** Owner, Contributor, Editor and Viewer, each with different permissions.
 - **Multiple spaces.** Create as many as you need, for example "Family", "Friends" or "Vacation 2025".
 - **Works alongside existing sharing.** Partner sharing, album sharing and shared links keep working as before.
 - **Public links that match the space.** An Owner or Editor can share a link covering what the space shows, contributions included. See [Sharing from a Shared Space](sharing.md#sharing-from-a-shared-space).
@@ -26,29 +26,30 @@ Gallery checks the caller's role on every endpoint. The three roles (Owner, Edit
 
 ## Roles and Permissions
 
-| Permission                  | Owner | Editor            | Viewer |
-| --------------------------- | ----- | ----------------- | ------ |
-| View assets in space        | Yes   | Yes               | Yes    |
-| Download assets             | Yes   | Yes               | Yes    |
-| Add own assets to space     | Yes   | Yes               | No     |
-| Remove assets from space    | Yes   | Yes               | No     |
-| Set cover photo             | Yes   | Yes               | No     |
-| Rename / edit space details | Yes   | Yes               | No     |
-| Add members                 | Yes   | When allowed [^1] | No     |
-| Change viewer/editor roles  | Yes   | When allowed [^1] | No     |
-| Remove members              | Yes   | No                | No     |
-| Toggle face recognition     | Yes   | No                | No     |
-| Change space color          | Yes   | Yes               | No     |
-| Delete the space            | Yes   | No                | No     |
-| Leave the space             | No    | Yes               | Yes    |
-| Search within space         | Yes   | Yes               | Yes    |
-| Create a public share link  | Yes   | Yes               | No\*   |
-| View activity log           | Yes   | Yes               | Yes    |
-| View space on map           | Yes   | Yes               | Yes    |
-| Manage people (name, merge) | Yes   | Yes               | No     |
-| Show/hide people            | Yes   | Yes               | No     |
-| Toggle timeline integration | Yes   | Yes               | Yes    |
-| Link/unlink libraries\*     | Yes   | Yes               | No     |
+| Permission                    | Owner | Contributor       | Editor            | Viewer |
+| ----------------------------- | ----- | ----------------- | ----------------- | ------ |
+| View assets in space          | Yes   | Yes               | Yes               | Yes    |
+| Download assets               | Yes   | Yes               | Yes               | Yes    |
+| Add own assets to space       | Yes   | Yes               | Yes               | No     |
+| Remove assets from space      | Yes   | Yes               | Yes               | No     |
+| Delete assets (move to trash) | Yes   | Yes               | No                | No     |
+| Set cover photo               | Yes   | Yes               | Yes               | No     |
+| Rename / edit space details   | Yes   | Yes               | Yes               | No     |
+| Add members                   | Yes   | When allowed [^1] | When allowed [^1] | No     |
+| Change viewer/editor roles    | Yes   | When allowed [^1] | When allowed [^1] | No     |
+| Remove members                | Yes   | No                | No                | No     |
+| Toggle face recognition       | Yes   | No                | No                | No     |
+| Change space color            | Yes   | Yes               | Yes               | No     |
+| Delete the space              | Yes   | No                | No                | No     |
+| Leave the space               | No    | Yes               | Yes               | Yes    |
+| Search within space           | Yes   | Yes               | Yes               | Yes    |
+| Create a public share link    | Yes   | Yes               | Yes               | No\*   |
+| View activity log             | Yes   | Yes               | Yes               | Yes    |
+| View space on map             | Yes   | Yes               | Yes               | Yes    |
+| Manage people (name, merge)   | Yes   | Yes               | Yes               | No     |
+| Show/hide people              | Yes   | Yes               | Yes               | No     |
+| Toggle timeline integration   | Yes   | Yes               | Yes               | Yes    |
+| Link/unlink libraries\*       | Yes   | Yes               | Yes               | No     |
 
 \* Requires server admin privileges in addition to the space role.
 
@@ -635,7 +636,7 @@ All tables prefixed `shared_space_` in the actual schema. Composite primary keys
 The feature follows the standard NestJS layered architecture:
 
 - **Controller** (`shared-space.controller.ts`). 26 REST endpoints under `/shared-spaces`, with role-based permission checks.
-- **Service** (`shared-space.service.ts`). Business logic including role validation (Owner > Editor > Viewer hierarchy), activity logging, and background job orchestration.
+- **Service** (`shared-space.service.ts`). Business logic including role validation (Owner > Contributor > Editor > Viewer hierarchy), activity logging, and background job orchestration.
 - **Repository** (`shared-space.repository.ts`). Kysely-based data access with 70+ methods covering all 8 tables.
 
 ### Key Mechanisms

@@ -3,7 +3,7 @@
 Space Albums let you bring whole albums into a [Shared Space](shared-spaces.md). Rather than adding photos one by one, you link an existing album, or create a new one inside the space, and all of its photos appear in the space for every member. They get their own **Albums** tab, which works like the main Albums page.
 
 :::info Permissions Model
-Like the rest of Shared Spaces, album actions follow the space's three roles: **Owner**, **Editor** and **Viewer**. Owners and Editors manage albums; Viewers browse them read-only. See [Roles and Permissions](#roles-and-permissions) below.
+Like the rest of Shared Spaces, album actions follow the space's four roles: **Owner**, **Contributor**, **Editor** and **Viewer**. Owners, Contributors and Editors manage albums; Viewers browse them read-only. See [Roles and Permissions](#roles-and-permissions) below.
 :::
 
 ## How it works
@@ -18,19 +18,19 @@ Like the rest of Shared Spaces, album actions follow the space's three roles: **
 
 ## Roles and Permissions
 
-| Permission                                         | Owner | Editor | Viewer |
-| -------------------------------------------------- | ----- | ------ | ------ |
-| Browse the Albums tab                              | Yes   | Yes    | Yes    |
-| Search / sort / group / switch album views         | Yes   | Yes    | Yes    |
-| Open a space album and view its photos             | Yes   | Yes    | Yes    |
-| Download photos from a space album                 | Yes   | Yes    | Yes    |
-| Link an existing album into the space \*           | Yes   | Yes    | No     |
-| Create a new album inside the space                | Yes   | Yes    | No     |
-| Unlink an album from the space                     | Yes   | Yes    | No     |
-| Add / remove photos in a space album               | Yes   | Yes    | No     |
-| Contribute photos you don't own (cross-owner)      | Yes   | Yes    | No     |
-| Toggle "hide from the space's photos" for an album | Yes   | Yes    | No     |
-| Hide/show an album on just your own timeline       | Yes   | Yes    | Yes    |
+| Permission                                         | Owner | Contributor | Editor | Viewer |
+| -------------------------------------------------- | ----- | ----------- | ------ | ------ |
+| Browse the Albums tab                              | Yes   | Yes         | Yes    | Yes    |
+| Search / sort / group / switch album views         | Yes   | Yes         | Yes    | Yes    |
+| Open a space album and view its photos             | Yes   | Yes         | Yes    | Yes    |
+| Download photos from a space album                 | Yes   | Yes         | Yes    | Yes    |
+| Link an existing album into the space \*           | Yes   | Yes         | Yes    | No     |
+| Create a new album inside the space                | Yes   | Yes         | Yes    | No     |
+| Unlink an album from the space                     | Yes   | Yes         | Yes    | No     |
+| Add / remove photos in a space album               | Yes   | Yes         | Yes    | No     |
+| Contribute photos you don't own (cross-owner)      | Yes   | Yes         | Yes    | No     |
+| Toggle "hide from the space's photos" for an album | Yes   | Yes         | Yes    | No     |
+| Hide/show an album on just your own timeline       | Yes   | Yes         | Yes    | Yes    |
 
 \* Linking also requires that you are the owner or an editor of the album itself. You can only link albums you are allowed to manage.
 

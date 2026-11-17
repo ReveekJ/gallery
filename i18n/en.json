@@ -1896,6 +1896,7 @@
   "review_duplicates": "Review duplicates",
   "review_large_files": "Review large files",
   "role": "Role",
+  "role_contributor": "Contributor",
   "role_editor": "Editor",
   "role_viewer": "Viewer",
   "rotate_api_key_prompt": "Are you sure you want to rotate this API key? The current key will stop working immediately.",

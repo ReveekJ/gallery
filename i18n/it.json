@@ -1875,6 +1875,7 @@
   "review_duplicates": "Esamina duplicati",
   "review_large_files": "Revisiona file pesanti",
   "role": "Ruolo",
+  "role_contributor": "Collaboratore",
   "role_editor": "Editor",
   "role_viewer": "Visualizzatore",
   "rotate_api_key_prompt": "Sei sicuro di voler ruotare questa chiave API? La chiave attuale smetterà subito di funzionare.",

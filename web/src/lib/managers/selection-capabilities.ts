@@ -42,6 +42,7 @@ export interface SelectionCapabilities {
   canSetCover: boolean;
   canRemoveFromAlbum: boolean;
   canRemoveFromSpace: boolean;
+  canTrashFromSpace: boolean;
 }
 
 const NO_CAPABILITIES: SelectionCapabilities = {
@@ -58,6 +59,7 @@ const NO_CAPABILITIES: SelectionCapabilities = {
   canSetCover: false,
   canRemoveFromAlbum: false,
   canRemoveFromSpace: false,
+  canTrashFromSpace: false,
 };
 
 export function getSelectionCapabilities(ctx: CommandContext, tagsEnabled: boolean): SelectionCapabilities {
@@ -92,6 +94,7 @@ export function getSelectionCapabilities(ctx: CommandContext, tagsEnabled: boole
   }
 
   const canRemoveFromSpace = isDirectSpace && space !== null && space.canWrite;
+  const canTrashFromSpace = isDirectSpace && space !== null && space.canDeleteFromSpace;
 
   // A space Owner/Editor is the one role that can act on assets they do not own: the server's
   // #764 contribution path (album.service.tryContributeDeniedAssets) accepts them into any album
@@ -128,5 +131,6 @@ export function getSelectionCapabilities(ctx: CommandContext, tagsEnabled: boole
     canSetCover: isEditorOfContext && sel.selectedAssetIds.length === 1,
     canRemoveFromAlbum,
     canRemoveFromSpace,
+    canTrashFromSpace,
   };
 }

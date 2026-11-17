@@ -1875,6 +1875,7 @@
   "review_duplicates": "检查重复项",
   "review_large_files": "检查大文件",
   "role": "选择用户权限",
+  "role_contributor": "贡献者",
   "role_editor": "可编辑",
   "role_viewer": "仅查看",
   "rotate_api_key_prompt": "确定要轮换此 API 密钥吗？当前密钥将立即失效。",

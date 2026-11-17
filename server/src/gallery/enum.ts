@@ -3,6 +3,7 @@ import z from 'zod';
 // Wholly fork-defined enums. src/enum.ts re-exports this module, so import them from 'src/enum.js' as usual.
 export enum SharedSpaceRole {
   Owner = 'owner',
+  Contributor = 'contributor',
   Editor = 'editor',
   Viewer = 'viewer',
 }
