@@ -109,12 +109,12 @@
             <p class="truncate text-sm font-medium">{member.name}</p>
             <p class="truncate text-xs text-gray-500">{member.email}</p>
           </div>
-          {#if canChangeRoles && member.role !== 'owner' && member.userId !== currentMember?.userId}
+          {#if canChangeRoles && member.role !== 'owner' && (isOwner || member.role !== SharedSpaceRole.Contributor) && member.userId !== currentMember?.userId}
             <Field class="w-28 shrink-0">
               <Select
                 value={member.role as string as SharedSpaceRole}
                 options={[
-                  { label: $t('role_contributor'), value: SharedSpaceRole.Contributor },
+                  ...(isOwner ? [{ label: $t('role_contributor'), value: SharedSpaceRole.Contributor }] : []),
                   { label: $t('role_editor'), value: SharedSpaceRole.Editor },
                   { label: $t('role_viewer'), value: SharedSpaceRole.Viewer },
                   ...(isOwner ? [{ label: $t('remove'), value: 'remove' }] : []),

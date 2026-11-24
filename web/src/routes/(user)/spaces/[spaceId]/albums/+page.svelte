@@ -14,8 +14,8 @@
   import { handleError } from '#lib/utils/handle-error.ts';
   import { canDrop, type DragPayload } from '#lib/utils/space-album-folder-dnd.ts';
   import { getFolderPath } from '#lib/utils/space-album-folders.ts';
+  import { canWriteSpace } from '#lib/utils/space-utils.ts';
   import {
-    SharedSpaceRole,
     createSharedSpaceAlbumFolder,
     deleteSharedSpaceAlbumFolder,
     getAlbumTimelineHidePreview,
@@ -65,9 +65,7 @@
   let searchQuery = $state('');
 
   const currentMember = $derived(members.find((m) => m.userId === authManager.user.id));
-  const isEditor = $derived(
-    currentMember?.role === SharedSpaceRole.Owner || currentMember?.role === SharedSpaceRole.Editor,
-  );
+  const isEditor = $derived(canWriteSpace(currentMember?.role));
 
   const linkedAlbumIds = $derived(albums.map((a) => a.id));
 

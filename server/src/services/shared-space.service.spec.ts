@@ -9,7 +9,6 @@ import {
   AlbumUserRole,
   AssetFileType,
   AssetOrder,
-  AssetStatus,
   AssetType,
   AssetVisibility,
   CacheControl,
@@ -3767,7 +3766,7 @@ describe(SharedSpaceService.name, () => {
       await expect(sut.trashAssets(auth, spaceId, { assetIds: [newUuid()] })).rejects.toBeInstanceOf(
         ForbiddenException,
       );
-      expect(mocks.asset.updateAll).not.toHaveBeenCalled();
+      expect(mocks.sharedSpace.trashSpaceAssets).not.toHaveBeenCalled();
       expect(mocks.event.emit).not.toHaveBeenCalled();
     });
 
@@ -3778,14 +3777,11 @@ describe(SharedSpaceService.name, () => {
       mocks.sharedSpace.getMember.mockResolvedValue(
         makeMemberResult({ spaceId, userId: auth.user.id, role: SharedSpaceRole.Contributor }),
       );
-      mocks.sharedSpace.getAssetIdsInSpace.mockResolvedValue(assetIds.map((assetId) => ({ assetId })));
+      mocks.sharedSpace.trashSpaceAssets.mockResolvedValue(true);
 
       await sut.trashAssets(auth, spaceId, { assetIds });
 
-      expect(mocks.asset.updateAll).toHaveBeenCalledWith(
-        assetIds,
-        expect.objectContaining({ status: AssetStatus.Trashed, deletedAt: expect.any(Date) }),
-      );
+      expect(mocks.sharedSpace.trashSpaceAssets).toHaveBeenCalledWith(spaceId, auth.user.id, assetIds);
       expect(mocks.event.emit).toHaveBeenCalledWith('AssetTrashAll', { assetIds, userId: auth.user.id });
     });
 
@@ -3797,12 +3793,11 @@ describe(SharedSpaceService.name, () => {
       mocks.sharedSpace.getMember.mockResolvedValue(
         makeMemberResult({ spaceId, userId: auth.user.id, role: SharedSpaceRole.Contributor }),
       );
-      mocks.sharedSpace.getAssetIdsInSpace.mockResolvedValue([{ assetId: visibleAssetId }]);
+      mocks.sharedSpace.trashSpaceAssets.mockResolvedValue(false);
 
       await expect(sut.trashAssets(auth, spaceId, { assetIds: [visibleAssetId, hiddenAssetId] })).rejects.toThrow(
         'not visible in this space',
       );
-      expect(mocks.asset.updateAll).not.toHaveBeenCalled();
       expect(mocks.event.emit).not.toHaveBeenCalled();
     });
   });

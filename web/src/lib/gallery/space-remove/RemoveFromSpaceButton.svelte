@@ -1,23 +1,33 @@
 <script lang="ts">
+  import {
+    fetchSelectionSpaces,
+    removableSpaces,
+    removeFromSpace,
+    spaceRoleFor,
+    type RemovableSpace,
+  } from '#lib/gallery/space-remove/space-removal.ts';
   import { getAllSpacesQuery } from '#lib/gallery/spaces/space.query.ts';
   import { assetMultiSelectManager } from '#lib/managers/asset-multi-select-manager.svelte.ts';
   import { authManager } from '#lib/managers/auth-manager.svelte.ts';
   import SpacePickerModal from '#lib/modals/SpacePickerModal.svelte';
   import { queryClient } from '#lib/queries/client.ts';
+  import { deleteAssets, type OnDelete } from '#lib/utils/actions.ts';
+  import { canTrashSpaceAssets } from '#lib/utils/space-utils.ts';
   import type { AssetSpacesItemDto } from '@immich/sdk';
   import { IconButton, modalManager } from '@immich/ui';
-  import { mdiImageRemoveOutline } from '@mdi/js';
+  import { mdiDeleteOutline, mdiImageRemoveOutline } from '@mdi/js';
   import { createQuery } from '@tanstack/svelte-query';
   import { t } from 'svelte-i18n';
-  import { fetchSelectionSpaces, removableSpaces, removeFromSpace, type RemovableSpace } from './space-removal';
 
   interface Props {
     /** Called with the removed photos that have left the user's timeline: other members' photos it showed only
     through that space. */
     onLeaveTimeline?: (assetIds: string[]) => void;
+    onTrash?: OnDelete;
+    shareSpaceId?: string;
   }
 
-  let { onLeaveTimeline }: Props = $props();
+  let { onLeaveTimeline, onTrash, shareSpaceId = $bindable() }: Props = $props();
 
   // Wait for the selection to settle (a drag, a day's checkbox) before asking the server.
   const SETTLE_MS = 250;
@@ -59,6 +69,37 @@
 
   const userId = $derived(authManager.authenticated ? authManager.user.id : undefined);
   const spaces = $derived(userId ? removableSpaces(answers, spacesQuery.data ?? [], userId) : []);
+  const fullSelectionSpaces = $derived(
+    spaces.filter(({ assetIds }) => selectedIds.every((assetId) => assetIds.includes(assetId))),
+  );
+  const trashSpace = $derived(
+    userId && !assetMultiSelectManager.isAllUserOwned
+      ? fullSelectionSpaces.find(({ space }) => canTrashSpaceAssets(spaceRoleFor(space, userId)))
+      : undefined,
+  );
+
+  $effect(() => {
+    shareSpaceId = assetMultiSelectManager.isAllUserOwned ? undefined : fullSelectionSpaces[0]?.space.id;
+  });
+
+  const trash = async () => {
+    if (!trashSpace || !onTrash) {
+      return;
+    }
+    const notify = onTrash;
+    await deleteAssets(
+      false,
+      (ids) => {
+        notify(ids);
+        for (const id of ids) {
+          assetMultiSelectManager.removeAssetFromMultiselectGroup(id);
+        }
+      },
+      assetMultiSelectManager.assets,
+      undefined,
+      trashSpace.space.id,
+    );
+  };
 
   const pick = async (): Promise<RemovableSpace | undefined> => {
     const chosen = await modalManager.show(SpacePickerModal, {
@@ -112,5 +153,16 @@
       : $t('remove_from_a_space')}
     icon={mdiImageRemoveOutline}
     onclick={remove}
+  />
+{/if}
+
+{#if trashSpace && onTrash}
+  <IconButton
+    shape="round"
+    color="secondary"
+    variant="ghost"
+    aria-label={$t('delete')}
+    icon={mdiDeleteOutline}
+    onclick={trash}
   />
 {/if}

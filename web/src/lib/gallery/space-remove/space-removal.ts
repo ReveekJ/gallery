@@ -1,6 +1,7 @@
 import { assetMultiSelectManager } from '#lib/managers/asset-multi-select-manager.svelte.ts';
 import { eventManager } from '#lib/managers/event-manager.svelte.ts';
 import { handleError } from '#lib/utils/handle-error.ts';
+import { canWriteSpace } from '#lib/utils/space-utils.ts';
 import {
   SharedSpaceRole,
   getAssetSpaces,
@@ -20,13 +21,15 @@ export type RemovableSpace = { space: SharedSpaceResponseDto; assetIds: string[]
 const BATCH_SIZE = 1000;
 
 /** The server lets the creator, an owner or an editor remove photos from a space. */
-export const canRemoveFrom = (space: SharedSpaceResponseDto, userId: string) => {
+export const spaceRoleFor = (space: SharedSpaceResponseDto, userId: string): SharedSpaceRole | undefined => {
   if (space.createdById === userId) {
-    return true;
+    return SharedSpaceRole.Owner;
   }
-  const role = space.members?.find((member) => member.userId === userId)?.role;
-  return role === SharedSpaceRole.Owner || role === SharedSpaceRole.Editor;
+  return space.members?.find((member) => member.userId === userId)?.role;
 };
+
+export const canRemoveFrom = (space: SharedSpaceResponseDto, userId: string): boolean =>
+  canWriteSpace(spaceRoleFor(space, userId));
 
 /** The spaces of `spaces` that hold some of the answered assets and that the user may remove from, fullest first. */
 export const removableSpaces = (

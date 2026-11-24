@@ -31,6 +31,12 @@ export function spaceRoleLabelKey(role: string): SpaceRoleLabelKey {
   }
 }
 
+export const canWriteSpace = (role: string | undefined): boolean =>
+  role === SharedSpaceRole.Owner || role === SharedSpaceRole.Contributor || role === SharedSpaceRole.Editor;
+
+export const canTrashSpaceAssets = (role: string | undefined): boolean =>
+  role === SharedSpaceRole.Owner || role === SharedSpaceRole.Contributor;
+
 export interface SplitResult {
   pinned: SharedSpaceResponseDto[];
   unpinned: SharedSpaceResponseDto[];

@@ -10,11 +10,13 @@
   import { timelineGroupingProps } from '#lib/gallery/filtered-timeline/timeline-grouping.svelte.ts';
   import { assetMultiSelectManager } from '#lib/managers/asset-multi-select-manager.svelte.ts';
   import { TimelineManager } from '#lib/managers/timeline-manager/timeline-manager.svelte.ts';
-  import { createPreloadedQuery } from '#lib/queries/client.ts';
+  import { createPreloadedQuery, queryClient } from '#lib/queries/client.ts';
   import { getUserConfigQuery } from '#lib/queries/config-user.query.ts';
   import { Route } from '#lib/route.ts';
   import { getTrashActions } from '#lib/services/trash.service.ts';
   import { handlePromiseError } from '#lib/utils.ts';
+  import { getAssetStatistics } from '@immich/sdk';
+  import { createQuery } from '@tanstack/svelte-query';
   import { t } from 'svelte-i18n';
   import { goto } from '$app/navigation';
   import type { PageData } from './$types';
@@ -46,7 +48,18 @@
     return;
   };
 
-  const { Empty, RestoreAll } = $derived(getTrashActions($t, timelineManager?.assetCount ?? 0));
+  const trashCount = $derived(timelineManager?.assetCount ?? 0);
+  const ownTrash = createQuery(
+    () => ({
+      queryKey: ['owned-trash-count', trashCount],
+      enabled: trashCount > 0,
+      queryFn: ({ signal }) => getAssetStatistics({ isTrashed: true }, { signal }),
+      staleTime: 0,
+    }),
+    () => queryClient,
+  );
+  const ownTrashCount = $derived(trashCount > 0 ? (ownTrash.data?.total ?? 0) : 0);
+  const { Empty, RestoreAll } = $derived(getTrashActions($t, ownTrashCount, ownTrashCount === trashCount));
 </script>
 
 {#if config.trash.enabled}
@@ -80,7 +93,9 @@
 {#if assetMultiSelectManager.selectionActive}
   <AssetSelectControlBar>
     <SelectAllAssets {timelineManager} assetInteraction={assetMultiSelectManager} />
-    <DeleteAssets force onAssetDelete={(assetIds) => timelineManager.removeAssets(assetIds)} />
-    <RestoreAssets onRestore={(assetIds) => timelineManager.removeAssets(assetIds)} />
+    {#if assetMultiSelectManager.isAllUserOwned}
+      <DeleteAssets force onAssetDelete={(assetIds) => timelineManager.removeAssets(assetIds)} />
+      <RestoreAssets onRestore={(assetIds) => timelineManager.removeAssets(assetIds)} />
+    {/if}
   </AssetSelectControlBar>
 {/if}

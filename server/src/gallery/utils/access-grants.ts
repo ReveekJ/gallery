@@ -49,7 +49,15 @@ export const withGalleryGrants = async (
   granted: Set<string>,
 ): Promise<Set<string>> => {
   const grant = galleryAccessGrants[permission];
-  return grant ? granted.union(await grant(access, auth.user.id, ids.difference(granted))) : granted;
+  const allowed = grant ? granted.union(await grant(access, auth.user.id, ids.difference(granted))) : granted;
+  if (permission !== Permission.AssetRead && permission !== Permission.AssetView) {
+    return allowed;
+  }
+
+  const remaining = ids.difference(allowed);
+  return remaining.size
+    ? allowed.union(await access.spaceAsset.checkTrashedThroughSpaceAccess(auth.user.id, remaining))
+    : allowed;
 };
 
 /**

@@ -668,7 +668,7 @@ describe(DownloadService.name, () => {
         );
 
         expect(mocks.sharedSpace.getMemberSpaceIdsLinkingAlbum).toHaveBeenCalledWith('album-1', '42', {
-          roles: [SharedSpaceRole.Owner, SharedSpaceRole.Editor],
+          roles: [SharedSpaceRole.Owner, SharedSpaceRole.Contributor, SharedSpaceRole.Editor],
         });
         expect(mocks.downloadRepository.downloadAlbumId).toHaveBeenCalledWith('album-1', ['space-1']);
       });

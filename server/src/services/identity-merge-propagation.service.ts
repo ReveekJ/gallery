@@ -3,7 +3,7 @@ import { Kysely, Transaction, sql } from 'kysely';
 import { BulkIdResponseDto } from 'src/dtos/asset-ids.response.dto.js';
 import { AuthDto } from 'src/dtos/auth.dto.js';
 import { MergeScopedPeopleDto, ScopedPersonProfileRefDto } from 'src/dtos/person.dto.js';
-import { JobName, SharedSpaceActivityType, SharedSpaceRole } from 'src/enum.js';
+import { JobName, SharedSpaceActivityType, canWriteSpace } from 'src/enum.js';
 import { GalleryPersonRepository } from 'src/gallery/repositories/gallery-person.repository.js';
 import { DatabaseRepository } from 'src/repositories/database.repository.js';
 import { FaceIdentityRepository } from 'src/repositories/face-identity.repository.js';
@@ -596,7 +596,7 @@ export class IdentityMergePropagationService {
     return collapsedSpaceIds
       .filter((spaceId) => {
         const role = roles.get(spaceId);
-        return role !== SharedSpaceRole.Owner && role !== SharedSpaceRole.Editor;
+        return !canWriteSpace(role);
       })
       .toSorted();
   }

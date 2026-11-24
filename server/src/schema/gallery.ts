@@ -51,6 +51,7 @@ import { SharedSpaceMemberTable } from 'src/schema/tables/shared-space-member.ta
 import { SharedSpacePersonAliasTable } from 'src/schema/tables/shared-space-person-alias.table.js';
 import { SharedSpacePersonFaceTable } from 'src/schema/tables/shared-space-person-face.table.js';
 import { SharedSpacePersonTable } from 'src/schema/tables/shared-space-person.table.js';
+import { SharedSpaceTrashTable } from 'src/schema/tables/shared-space-trash.table.js';
 import { SharedSpaceTable } from 'src/schema/tables/shared-space.table.js';
 import { StorageMigrationLogTable } from 'src/schema/tables/storage-migration-log.table.js';
 import { UserGroupMemberTable } from 'src/schema/tables/user-group-member.table.js';
@@ -90,6 +91,7 @@ export const galleryTables = [
   PetSearchTable,
   SharedLinkSpaceTable,
   SharedSpaceTable,
+  SharedSpaceTrashTable,
   SharedSpaceAuditTable,
   SharedSpaceMemberTable,
   SharedSpaceMemberAuditTable,
@@ -153,6 +155,7 @@ export interface GalleryDB {
   shared_space_audit: SharedSpaceAuditTable;
   shared_space_member: SharedSpaceMemberTable;
   shared_space_member_audit: SharedSpaceMemberAuditTable;
+  shared_space_trash: SharedSpaceTrashTable;
   shared_space_asset: SharedSpaceAssetTable;
   shared_space_asset_audit: SharedSpaceAssetAuditTable;
   shared_space_face_match_backfill_target: SharedSpaceFaceMatchBackfillTargetTable;

@@ -111,6 +111,9 @@ export const galleryTimeBucketOptions = async (
     ...(await service.resolveViewerScope(auth, 'timeline', { ...dto })),
     bucketSize: dto.bucketSize ?? TimeBucketSize.Month,
     albumSpaceIds,
+    ...(dto.isTrashed && !auth.sharedLink && !auth.stockClient && dto.userId === auth.user.id && !dto.withPartners
+      ? { spaceTrashActorId: auth.user.id }
+      : {}),
     // #1041: the REQUESTING user's own id, distinct from `userIds` (which also carries partner ids).
     // See TimeBucketOptions.callerId — the hidden-scope subtraction attaches ONLY here.
     callerId: dto.userId ? auth.user.id : undefined,

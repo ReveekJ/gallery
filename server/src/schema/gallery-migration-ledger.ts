@@ -31,6 +31,7 @@ const renamedGalleryMigrations: Record<string, string | null> = {
   // Shipped in the pr-1195 RC images, then renumbered above the fork migrations main had shipped meanwhile, so a
   // rollback reverts it first on fresh installs too.
   '1799400000000-ScopeJitOffToDatabase': '1799800000000-ScopeJitOffToDatabase',
+  '1800100000000-AddSharedSpaceTrashTable': '1800200000000-AddSharedSpaceTrashTable',
 };
 
 const createGalleryMigrator = (db: Kysely<any>) =>

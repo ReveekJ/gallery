@@ -202,14 +202,8 @@ export const getGalleryAssetActions = <T extends UpstreamAssetActions>(
   const authUser = authManager.authenticated ? authManager.user : undefined;
   const isOwner = !!(authUser && authUser.id === asset.ownerId);
 
-  // Server-side `Permission.AssetShare` is owner ∪ partner only, so album or space membership grants
-  // no share access. Gating on `authUser` alone offered a shared-album/space viewer a button that
-  // `POST /shared-links` then rejected with "Not found or no asset.share access" (#871).
-  //
-  // `|| !asset.ownerId`: a `showMetadata: false` shared link returns SanitizedAssetResponseDto, which
-  // omits `ownerId` altogether, so ownership is unknowable client-side there — treat unknown as
-  // shareable rather than hiding the button from the owner of the asset they linked.
-  const canShare = !!authUser && (isOwner || !asset.ownerId);
+  const shareSpaceId = !isOwner && space?.canWrite ? space.id : undefined;
+  const canShare = !!authUser && (isOwner || !asset.ownerId || !!shareSpaceId);
 
   // #889: an asset the caller does not own reaches an album only through the #764 contribution
   // path, which the server accepts solely for albums linked to a space where the caller is
@@ -223,6 +217,10 @@ export const getGalleryAssetActions = <T extends UpstreamAssetActions>(
   const Share: ActionItem = {
     ...upstream.Share,
     $if: () => canShare && !asset.isTrashed && asset.visibility !== AssetVisibility.Locked,
+    onAction: shareSpaceId
+      ? () =>
+          modalManager.show(SharedLinkCreateModal, { assetIds: [asset.id], spaceId: shareSpaceId, contributedCount: 1 })
+      : upstream.Share.onAction,
   };
 
   const Favorite: ActionItem = {

@@ -17,6 +17,7 @@
   import SetVisibilityAction from '#lib/components/timeline/actions/SetVisibilityAction.svelte';
   import { AssetAction } from '#lib/constants.ts';
   import ArchiveAction from '#lib/gallery/actions/ArchiveAction.svelte';
+  import { useEditableSelection } from '#lib/gallery/asset-viewer/editable-selection.svelte.ts';
   import FilteredTimelinePage from '#lib/gallery/filtered-timeline/FilteredTimelinePage.svelte';
   import { createPhotosTimeline } from '#lib/gallery/filtered-timeline/photos-timeline.ts';
   import RemoveFromSpaceButton from '#lib/gallery/space-remove/RemoveFromSpaceButton.svelte';
@@ -42,6 +43,14 @@
   const filtered = createPhotosTimeline(() => timelineManager);
   const options = $derived(filtered.options);
   filtered.registerSelectionContext({ canAddToAlbum: () => true, canAddToSpace: () => true });
+
+  let shareSpaceId = $state<string>();
+  const editableSelection = useEditableSelection(
+    () => assetMultiSelectManager,
+    () => ({ userId: authManager.user.id }),
+  );
+  const editableSelectedAssetIds = $derived(editableSelection.ids);
+  const canEditSelection = $derived(assetMultiSelectManager.isAllUserOwned || !!editableSelectedAssetIds?.length);
 
   let selectedAssets = $derived(assetMultiSelectManager.assets);
   let isLinkActionAvailable = $derived.by(() => {
@@ -133,43 +142,51 @@
 
 {#if assetMultiSelectManager.selectionActive}
   <AssetSelectControlBar>
-    {const Actions = $derived(getAssetBulkActions($t))}
+    {const Actions = $derived(getAssetBulkActions($t, undefined, { editableSelectedAssetIds, shareSpaceId }))}
     {const StackActions = $derived(filtered.browseOnly(getStackBulkActions($t)))}
     <CommandPaletteDefaultProvider name={$t('assets')} actions={Object.values(Actions)} />
 
     <ActionButton action={Actions.CreateSharedLink} />
     <SelectAllAssets {timelineManager} assetInteraction={assetMultiSelectManager} onSelectAll={filtered.onSelectAll} />
     <ActionButton action={Actions.AddToAlbum} />
-    <RemoveFromSpaceButton onLeaveTimeline={filtered.onAssetDelete} />
+    <RemoveFromSpaceButton
+      onLeaveTimeline={filtered.onAssetDelete}
+      onTrash={filtered.onAssetDelete}
+      bind:shareSpaceId
+    />
 
     <!-- #763: a favorite is a per-user overlay row, so it needs no ownership gate. -->
     <FavoriteAction removeFavorite={assetMultiSelectManager.isAllFavorite} onFavorite={filtered.onFavorite} />
 
-    {#if assetMultiSelectManager.isAllUserOwned}
+    {#if canEditSelection}
       <ButtonContextMenu icon={mdiDotsVertical} title={$t('menu')}>
         <DownloadAction menuItem />
-        <ActionMenuItem action={StackActions.Stack} />
-        <ActionMenuItem action={StackActions.Unstack} />
-        {#if !filtered.showSearchResults && isLinkActionAvailable}
-          <LinkLivePhotoAction
-            menuItem
-            unlink={assetMultiSelectManager.assets.length === 1}
-            onLink={handleLink}
-            onUnlink={handleUnlink}
-          />
+        {#if assetMultiSelectManager.isAllUserOwned}
+          <ActionMenuItem action={StackActions.Stack} />
+          <ActionMenuItem action={StackActions.Unstack} />
+          {#if !filtered.showSearchResults && isLinkActionAvailable}
+            <LinkLivePhotoAction
+              menuItem
+              unlink={assetMultiSelectManager.assets.length === 1}
+              onLink={handleLink}
+              onUnlink={handleUnlink}
+            />
+          {/if}
         {/if}
-        <RotateAction />
-        <ChangeDate menuItem />
-        <ChangeDescription menuItem />
-        <ChangeLocation menuItem />
-        <ArchiveAction menuItem onArchive={filtered.onArchive} />
+        <RotateAction {editableSelectedAssetIds} />
+        <ChangeDate menuItem {editableSelectedAssetIds} />
+        <ChangeDescription menuItem {editableSelectedAssetIds} />
+        <ChangeLocation menuItem {editableSelectedAssetIds} />
         <ActionMenuItem action={Actions.Tag} />
-        <DeleteAssets menuItem onAssetDelete={filtered.onAssetDelete} onUndoDelete={filtered.onUndoDelete} />
-        <SetVisibilityAction menuItem onVisibilitySet={handleSetVisibility} />
-        <hr />
-        <ActionMenuItem action={Actions.RegenerateThumbnailJob} />
-        <ActionMenuItem action={Actions.RefreshMetadataJob} />
-        <ActionMenuItem action={Actions.TranscodeVideoJob} />
+        {#if assetMultiSelectManager.isAllUserOwned}
+          <ArchiveAction menuItem onArchive={filtered.onArchive} />
+          <DeleteAssets menuItem onAssetDelete={filtered.onAssetDelete} onUndoDelete={filtered.onUndoDelete} />
+          <SetVisibilityAction menuItem onVisibilitySet={handleSetVisibility} />
+          <hr />
+          <ActionMenuItem action={Actions.RegenerateThumbnailJob} />
+          <ActionMenuItem action={Actions.RefreshMetadataJob} />
+          <ActionMenuItem action={Actions.TranscodeVideoJob} />
+        {/if}
       </ButtonContextMenu>
     {:else}
       <DownloadAction />

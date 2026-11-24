@@ -7,6 +7,7 @@
   import SetVisibilityAction from '#lib/components/asset-viewer/actions/SetVisibilityAction.svelte';
   import type { OnAction, PreAction } from '#lib/components/asset-viewer/actions/action.ts';
   import ButtonContextMenu from '#lib/components/shared-components/context-menu/ButtonContextMenu.svelte';
+  import { useAssetSpacePermissions } from '#lib/gallery/asset-viewer/asset-space.ts';
   import { getSpatialSceneActions } from '#lib/gallery/spatial/spatial-scene.svelte.ts';
   import { viewerAlbumId } from '#lib/gallery/stack/album-stack-strip.ts';
   import { getViewerSpace } from '#lib/gallery/viewer-space.ts';
@@ -60,8 +61,18 @@
     setPlayOriginalVideo,
   }: Props = $props();
 
-  const { space } = $derived.by(getViewerSpace());
+  const { space: viewerSpace } = $derived.by(getViewerSpace());
+  const sharedLink = getSharedLink();
   const isOwner = $derived(authManager.authenticated && asset.ownerId === authManager.user.id);
+  const isReadOnlyTrash = $derived(asset.isTrashed && !isOwner);
+  const spacePermissions = useAssetSpacePermissions(
+    () => asset,
+    () => authManager.authenticated && !isOwner && !sharedLink && !asset.isTrashed,
+  );
+  const space = $derived(spacePermissions.permissions ?? viewerSpace);
+  const trashSpaceId = $derived(
+    spacePermissions.permissions?.canDeleteFromSpace ? spacePermissions.permissions.id : undefined,
+  );
   const isLocked = $derived(asset.visibility === AssetVisibility.Locked);
   // #734: a space Owner/Editor may edit a member's asset. Server-authoritative via `asset.canEdit`
   // on a single-asset read; falls back to ownership otherwise (see `canEditAsset`).
@@ -91,10 +102,12 @@
   );
   const StackActions = $derived(getStackActions($t, stack, asset, !!viewerAlbumId(album)));
   const SpatialActions = $derived(getSpatialSceneActions($t, asset));
-  const sharedLink = getSharedLink();
 </script>
 
-<CommandPaletteDefaultProvider name={$t('assets')} actions={withoutIcons([Close, Cast, ...Object.values(Actions)])} />
+<CommandPaletteDefaultProvider
+  name={$t('assets')}
+  actions={withoutIcons(isReadOnlyTrash ? [Close, Actions.Info] : [Close, Cast, ...Object.values(Actions)])}
+/>
 
 <div
   class="relative isolate flex h-16 place-items-center justify-between px-3 drop-shadow-[0_0_1px_rgba(0,0,0,0.4)] transition-transform duration-200"
@@ -123,29 +136,35 @@
         {/snippet}
       </Tooltip>
     {/if}
-    <ActionButton action={Cast} />
-    <ActionButton action={Actions.Share} />
-    <ActionButton action={Actions.Offline} />
-    <ActionButton action={Actions.ZoomIn} />
-    <ActionButton action={Actions.ZoomOut} />
-    <ActionButton action={Actions.PlayMotionPhoto} />
-    <ActionButton action={Actions.StopMotionPhoto} />
-    <ActionButton action={SpatialActions.ShowSpatialScene} />
-    <ActionButton action={SpatialActions.HideSpatialScene} />
-    <ActionButton action={Actions.Copy} />
-    <ActionButton action={Actions.SharedLinkDownload} />
-    <ActionButton action={Actions.Info} />
-    <ActionButton action={Actions.Favorite} />
-    <ActionButton action={Actions.Unfavorite} />
+    {#if isReadOnlyTrash}
+      <ActionButton action={Actions.Info} />
+    {:else}
+      <ActionButton action={Cast} />
+      <ActionButton action={Actions.Share} />
+      <ActionButton action={Actions.Offline} />
+      <ActionButton action={Actions.ZoomIn} />
+      <ActionButton action={Actions.ZoomOut} />
+      <ActionButton action={Actions.PlayMotionPhoto} />
+      <ActionButton action={Actions.StopMotionPhoto} />
+      <ActionButton action={SpatialActions.ShowSpatialScene} />
+      <ActionButton action={SpatialActions.HideSpatialScene} />
+      <ActionButton action={Actions.Copy} />
+      <ActionButton action={Actions.SharedLinkDownload} />
+      <ActionButton action={Actions.Info} />
+      <ActionButton action={Actions.Favorite} />
+      <ActionButton action={Actions.Unfavorite} />
 
-    <ActionButton action={Actions.RotateRight} />
-    <ActionButton action={Actions.Edit} />
+      <ActionButton action={Actions.RotateRight} />
+      <ActionButton action={Actions.Edit} />
 
-    {#if isOwner}
-      <DeleteAction {asset} {onAction} {preAction} {onUndoDelete} />
+      {#if isOwner}
+        <DeleteAction {asset} {onAction} {preAction} {onUndoDelete} />
+      {:else if trashSpaceId}
+        <DeleteAction {asset} {onAction} {preAction} {trashSpaceId} />
+      {/if}
     {/if}
 
-    {#if !sharedLink}
+    {#if !sharedLink && !isReadOnlyTrash}
       <ButtonContextMenu direction="left" align="top-right" color="secondary" title={$t('more')} icon={mdiDotsVertical}>
         <ActionMenuItem action={Actions.PlaySlideshow} />
 

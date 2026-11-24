@@ -21,7 +21,7 @@ export function resolveSpaceMemberManagement(
   space: SpaceMemberPermissionSettings,
   server: ServerMemberPermissionSettings,
 ): SharedSpaceMemberManagementDto {
-  const editor = role === SharedSpaceRole.Editor;
+  const editor = role === SharedSpaceRole.Editor || role === SharedSpaceRole.Contributor;
   const owner = role === SharedSpaceRole.Owner;
   return {
     editorsCanAddMembers: space.editorsCanAddMembers,

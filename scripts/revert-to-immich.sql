@@ -734,6 +734,7 @@ DROP TABLE IF EXISTS "asset_duplicate_checksum" CASCADE;
 
 -- Per-user favorites overlay (#763). asset."isFavorite" is restored and
 -- backfilled from this table in step 1b above before it is dropped here.
+DROP TABLE IF EXISTS "shared_space_trash" CASCADE;
 DROP TABLE IF EXISTS "asset_favorite_audit" CASCADE;
 DROP TABLE IF EXISTS "asset_favorite" CASCADE;
 
@@ -1241,6 +1242,8 @@ DELETE FROM "kysely_migrations"
   '1799900000000-AddAssetDataSaverVideoTable',
   '1800000000000-AddAssetFaceVideoFrameTable',
   '1800100000000-AddVideoPetsSampledAt',
+  '1800100000000-AddSharedSpaceTrashTable',
+  '1800200000000-AddSharedSpaceTrashTable',
   -- Pre-rename name, recorded by builds from before the ledger split: this migration was
   -- renumbered off 1793000000000 when fork PR #1060 took that timestamp, but rolling RC instances
   -- had already recorded the pre-rename name. Drop that row too, or upstream's migrator aborts
@@ -1347,7 +1350,7 @@ BEGIN
        'face_person_verdict', 'face_repair_scan', 'face_repair_decline',
        'face_repair_scan_flagged_face', 'face_repair_lock',
        'pet_search',
-       'asset_favorite_audit', 'asset_favorite',
+       'asset_favorite_audit', 'asset_favorite', 'shared_space_trash',
        'asset_job_status_gallery',
        'asset_video_trim',
        'asset_image_adjust',

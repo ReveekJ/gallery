@@ -19,7 +19,7 @@
 //
 // Every caller must LEFT JOIN `shared_link_space` on `shared_link.id`; a missing join fails the query.
 import { Expression, ExpressionBuilder, SqlBool } from 'kysely';
-import { AlbumUserRole, SharedSpaceRole } from 'src/enum.js';
+import { AlbumUserRole, spaceWriterRoles } from 'src/enum.js';
 import { DB } from 'src/schema/index.js';
 import { spaceAssetPathBranches, spaceVisibilityGate } from 'src/utils/shared-space-album-scope.js';
 
@@ -27,7 +27,7 @@ import { spaceAssetPathBranches, spaceVisibilityGate } from 'src/utils/shared-sp
 The space roles that may publish a link covering other members' photos. Single source of truth for
 the create gate and every read gate, so they cannot drift apart.
 */
-export const sharedLinkPublisherRoles = [SharedSpaceRole.Owner, SharedSpaceRole.Editor];
+export const sharedLinkPublisherRoles = spaceWriterRoles;
 
 /**
 Condition 1 — the link's creator still holds a write role in the space it was created from.

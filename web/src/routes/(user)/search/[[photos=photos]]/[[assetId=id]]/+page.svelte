@@ -15,6 +15,7 @@
   import SetVisibilityAction from '#lib/components/timeline/actions/SetVisibilityAction.svelte';
   import { QueryParameter } from '#lib/constants.ts';
   import ArchiveAction from '#lib/gallery/actions/ArchiveAction.svelte';
+  import { useEditableSelection } from '#lib/gallery/asset-viewer/editable-selection.svelte.ts';
   import SearchLegacyNotice from '#lib/gallery/search/SearchLegacyNotice.svelte';
   import { parseSearchTerms } from '#lib/gallery/search/parse-search-terms.ts';
   import {
@@ -23,7 +24,9 @@
     registerSearchSelection,
     sharedSpacesDefault,
   } from '#lib/gallery/search/search-page.ts';
+  import RemoveFromSpaceButton from '#lib/gallery/space-remove/RemoveFromSpaceButton.svelte';
   import { assetMultiSelectManager } from '#lib/managers/asset-multi-select-manager.svelte.ts';
+  import { authManager } from '#lib/managers/auth-manager.svelte.ts';
   import type { TimelineAsset, Viewport } from '#lib/managers/timeline-manager/types.ts';
   import { createPreloadedQuery } from '#lib/queries/client.ts';
   import { getUserConfigQuery } from '#lib/queries/config-user.query.ts';
@@ -52,6 +55,14 @@
   import { t } from 'svelte-i18n';
   import { afterNavigate, goto } from '$app/navigation';
   import { page } from '$app/state';
+
+  let shareSpaceId = $state<string>();
+  const editableSelection = useEditableSelection(
+    () => assetMultiSelectManager,
+    () => ({ userId: authManager.authenticated ? authManager.user.id : undefined }),
+  );
+  const editableSelectedAssetIds = $derived(editableSelection.ids);
+  const canEditSelection = $derived(assetMultiSelectManager.isAllUserOwned || !!editableSelectedAssetIds?.length);
 
   const query = createPreloadedQuery(getUserConfigQuery);
   const config = $derived(query.data);
@@ -380,7 +391,7 @@
     {#if assetMultiSelectManager.selectionActive}
       <div class="fixed inset-s-0 top-0 z-2 w-full">
         <AssetSelectControlBar>
-          {const Actions = $derived(getAssetBulkActions($t))}
+          {const Actions = $derived(getAssetBulkActions($t, undefined, { editableSelectedAssetIds, shareSpaceId }))}
           <CommandPaletteDefaultProvider name={$t('assets')} actions={Object.values(Actions)} />
 
           <ActionButton action={Actions.CreateSharedLink} />
@@ -393,26 +404,29 @@
             onclick={handleSelectAll}
           />
           <ActionButton action={Actions.AddToAlbum} />
+          <RemoveFromSpaceButton onLeaveTimeline={onAssetDelete} onTrash={onAssetDelete} bind:shareSpaceId />
           <FavoriteAction removeFavorite={assetMultiSelectManager.isAllFavorite} {onFavorite} />
 
-          {#if assetMultiSelectManager.isAllUserOwned}
+          {#if canEditSelection}
             <ButtonContextMenu icon={mdiDotsVertical} title={$t('menu')}>
               <ActionMenuItem action={Actions.AddToAlbum} />
               <DownloadAction menuItem />
-              <RotateAction />
-              <ChangeDate menuItem />
-              <ChangeDescription menuItem />
-              <ChangeLocation menuItem />
-              <ArchiveAction menuItem unarchive={assetMultiSelectManager.isAllArchived} {onArchive} />
-              <SetVisibilityAction menuItem onVisibilitySet={handleSetVisibility} />
+              <RotateAction {editableSelectedAssetIds} />
+              <ChangeDate menuItem {editableSelectedAssetIds} />
+              <ChangeDescription menuItem {editableSelectedAssetIds} />
+              <ChangeLocation menuItem {editableSelectedAssetIds} />
               <ActionMenuItem action={Actions.Tag} />
+              {#if assetMultiSelectManager.isAllUserOwned}
+                <ArchiveAction menuItem unarchive={assetMultiSelectManager.isAllArchived} {onArchive} />
+                <SetVisibilityAction menuItem onVisibilitySet={handleSetVisibility} />
 
-              <DeleteAssets menuItem {onAssetDelete} onUndoDelete={onSearchQueryUpdate} />
+                <DeleteAssets menuItem {onAssetDelete} onUndoDelete={onSearchQueryUpdate} />
 
-              <hr />
-              <ActionMenuItem action={Actions.RegenerateThumbnailJob} />
-              <ActionMenuItem action={Actions.RefreshMetadataJob} />
-              <ActionMenuItem action={Actions.TranscodeVideoJob} />
+                <hr />
+                <ActionMenuItem action={Actions.RegenerateThumbnailJob} />
+                <ActionMenuItem action={Actions.RefreshMetadataJob} />
+                <ActionMenuItem action={Actions.TranscodeVideoJob} />
+              {/if}
             </ButtonContextMenu>
           {:else}
             <DownloadAction />

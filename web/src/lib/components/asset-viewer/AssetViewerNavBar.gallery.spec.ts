@@ -1,9 +1,12 @@
 import { renderInViewerSpace } from '#lib/gallery/viewer-space.test-helpers.ts';
 import { authManager } from '#lib/managers/auth-manager.svelte.ts';
 import AssetAddToCollectionModal from '#lib/modals/AssetAddToCollectionModal.svelte';
+import { queryClient } from '#lib/queries/client.ts';
+import { getUserConfigQuery } from '#lib/queries/config-user.query.ts';
 import { factory } from '#test/unit/factories.ts';
+import { test } from '#test/unit/fixtures.ts';
 import { renderWithTooltips } from '#test/unit/helpers.ts';
-import { AssetTypeEnum } from '@immich/sdk';
+import { AssetTypeEnum, SharedSpaceRole } from '@immich/sdk';
 import { commandPaletteManager, modalManager } from '@immich/ui';
 import { expect } from 'vitest';
 import { page } from 'vitest/browser';
@@ -68,6 +71,65 @@ describe('AssetViewerNavBar component', () => {
     await expect.element(screen.getByLabelText('go_back')).toBeInTheDocument();
     expect(screen.getByText('edited').query()).toBeNull();
   });
+
+  it('shows a trashed photo owned by another user in read-only mode', async () => {
+    authManager.setUser(factory.user({ id: 'trash-actor' }));
+    authManager.setPreferences(factory.preferences({ cast: { gCastEnabled: false } }));
+    const asset = factory.asset({ ownerId: 'asset-owner', isTrashed: true });
+    const screen = await renderWithTooltips(AssetViewerNavBar, { asset, ...additionalProps });
+
+    await expect.element(screen.getByLabelText('go_back')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'permanently_delete' }).query()).toBeNull();
+    expect(screen.getByRole('button', { name: 'more' }).query()).toBeNull();
+  });
+
+  for (const role of [SharedSpaceRole.Contributor, SharedSpaceRole.Editor]) {
+    test(`checks single-photo trash from the main timeline for a space ${role}`, async ({ api, settle }) => {
+      const user = factory.user({ id: 'space-member' });
+      authManager.setUser(user);
+      authManager.setPreferences(factory.preferences({ cast: { gCastEnabled: false } }));
+      await queryClient.ensureQueryData(getUserConfigQuery());
+      const asset = factory.asset({ ownerId: 'space-owner', resolvedSpaceId: 'space-1', isTrashed: false });
+      const now = new Date().toISOString();
+      api.on({
+        getAllSpaces: () => ({
+          json: [
+            {
+              id: 'space-1',
+              name: 'Test',
+              createdById: asset.ownerId,
+              createdAt: now,
+              updatedAt: now,
+              members: [
+                {
+                  userId: user.id,
+                  name: user.name,
+                  email: user.email,
+                  joinedAt: now,
+                  role,
+                  sharePersonMetadata: false,
+                  showInTimeline: true,
+                },
+              ],
+            },
+          ],
+        }),
+        trashAssets: () => ({ status: 204 }),
+      });
+
+      const screen = await renderWithTooltips(AssetViewerNavBar, { asset, ...additionalProps });
+      await settle();
+      const button = screen.getByRole('button', { name: 'delete', exact: true });
+
+      if (role === SharedSpaceRole.Contributor) {
+        await button.click();
+        await settle();
+        expect(api.trashAssets).toHaveBeenCalledWith({ params: { id: 'space-1' }, body: { assetIds: [asset.id] } });
+      } else {
+        await expect.element(button).not.toBeInTheDocument();
+      }
+    });
+  }
 
   // #889: viewing a shared-space photo owned by someone else, "add to album or space" used to
   // list every personal album — all of which the server must reject.

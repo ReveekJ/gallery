@@ -67,6 +67,31 @@ describe('RemoveFromSpaceButton', () => {
     expect(button()).toBeNull();
   });
 
+  it('offers removal and scoped trash when a Contributor space covers the selection', async () => {
+    const space = factory.sharedSpace({
+      id: 'family',
+      createdById: 'other',
+      members: [
+        {
+          userId: 'me',
+          role: SharedSpaceRole.Contributor,
+          name: 'Contributor',
+          email: 'contributor@example.test',
+          joinedAt: family.createdAt,
+          sharePersonMetadata: false,
+          showInTimeline: true,
+        },
+      ],
+    });
+    queryClient.setQueryData(spacesQueryKey, [space]);
+    answer({ a1: ['family'], a2: ['family'] });
+    await renderWithTooltips(RemoveFromSpaceButton, { onTrash: vi.fn() });
+    await settle();
+
+    expect(page.getByRole('button', { name: 'remove_from_named_space' }).query()).not.toBeNull();
+    expect(page.getByRole('button', { name: 'delete', exact: true }).query()).not.toBeNull();
+  });
+
   it('names the one space and removes the selected photos it holds', async () => {
     answer({ a1: ['family'], a2: ['family'] });
     await renderWithTooltips(RemoveFromSpaceButton, {});

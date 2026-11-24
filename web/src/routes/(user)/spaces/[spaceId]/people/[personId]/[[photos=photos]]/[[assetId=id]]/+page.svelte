@@ -30,10 +30,10 @@
   import { handleError } from '#lib/utils/handle-error.ts';
   import { getSpacePersonFaceThumbnailUrl } from '#lib/utils/people-utils.ts';
   import { toScopedPersonRef as toPersonScopedRef } from '#lib/utils/scoped-person-ref.ts';
+  import { canTrashSpaceAssets, canWriteSpace } from '#lib/utils/space-utils.ts';
   import {
     RepresentativeFaceSource,
     ScopedPersonProfileType,
-    SharedSpaceRole,
     confirmSpacePersonFaceSuggestion,
     detachScopedPerson,
     dismissSpacePersonFaceSuggestion,
@@ -117,9 +117,8 @@
   });
 
   const currentMember = $derived(members.find((member) => member.userId === authManager.user.id));
-  const isEditor = $derived(
-    currentMember?.role === SharedSpaceRole.Owner || currentMember?.role === SharedSpaceRole.Editor,
-  );
+  const canDeleteFromSpace = $derived(canTrashSpaceAssets(currentMember?.role));
+  const isEditor = $derived(canWriteSpace(currentMember?.role));
   const getSpacePersonRoute = (personId: string) => Route.viewSpacePerson(space.id, personId, previousRouteParams);
   let thumbnailRefresh = $state<string | null>(null);
   const thumbnailUrl = $derived(getSpacePersonThumbnailUrl(person, thumbnailRefresh ?? person.updatedAt));
@@ -774,7 +773,7 @@
     <SelectionToolbar
       {timelineManager}
       assetInteraction={assetMultiSelectManager}
-      space={{ id: space.id, canWrite: isEditor, members }}
+      space={{ id: space.id, canWrite: isEditor, canDeleteFromSpace, members }}
       downloadFilename={`${person.name || space.name || 'immich'}.zip`}
       onRemove={handleRemoveAssets}
       onFavorite={(ids, isFavorite) => timelineManager.update(ids, (asset) => (asset.isFavorite = isFavorite))}

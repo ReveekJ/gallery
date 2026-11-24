@@ -1,4 +1,5 @@
 import TestWrapper from '#lib/components/TestWrapper.svelte';
+import { getAssetStatistics } from '@immich/sdk';
 import type { Component } from 'svelte';
 import { render } from 'vitest-browser-svelte';
 import { page } from 'vitest/browser';
@@ -67,8 +68,13 @@ vi.mock('#lib/managers/server-config-manager.svelte', () => ({
   serverConfigManager: mockServerConfigManager,
 }));
 
-vi.mock('#lib/services/trash.service.js', () => ({
+vi.mock('#lib/services/trash.service.ts', () => ({
   getTrashActions: vi.fn(() => ({ Empty: {}, RestoreAll: {} })),
+}));
+
+vi.mock(import('@immich/sdk'), async (original) => ({
+  ...(await original()),
+  getAssetStatistics: vi.fn().mockResolvedValue({ total: 0, images: 0, videos: 0 }),
 }));
 
 // Substring checks on a stub's rendered JSON; jest-dom's toHaveTextContent matched substrings.
@@ -196,5 +202,12 @@ describe('Trash page timeline grouping', () => {
 
     await expect.element(page.getByTestId('timeline-desktop-grouping-control')).toBeInTheDocument();
     expect(page.getByTestId('add-all-to-collection').query()).toBeNull();
+  });
+
+  it('requests the owner-only trash count independently of the visible timeline', async () => {
+    timelineStubGlobals.__timelineStubAssetCount = 3;
+    await renderPage();
+
+    await vi.waitFor(() => expect(getAssetStatistics).toHaveBeenCalledWith({ isTrashed: true }, expect.any(Object)));
   });
 });

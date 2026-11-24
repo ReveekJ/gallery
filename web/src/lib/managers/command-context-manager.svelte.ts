@@ -2,6 +2,7 @@ import { authManager } from '#lib/managers/auth-manager.svelte.ts';
 import type { TimelineAsset } from '#lib/managers/timeline-manager/types.ts';
 import type { OnArchive, OnDelete, OnFavorite, OnUndoDelete } from '#lib/utils/actions.ts';
 import { isAlbumsRoute, isSpacesRoute } from '#lib/utils/navigation.ts';
+import { canTrashSpaceAssets, canWriteSpace } from '#lib/utils/space-utils.ts';
 import {
   AlbumUserRole,
   AssetVisibility,
@@ -254,9 +255,8 @@ export function registerSpaceContext(
     const self = members.find((m) => m.userId === currentUserId);
     const role = self?.role as unknown as SharedSpaceRole | undefined;
     const isOwner = currentUserId !== null && currentUserId === space.createdById;
-    const canWrite =
-      role === SharedSpaceRole.Owner || role === SharedSpaceRole.Contributor || role === SharedSpaceRole.Editor;
-    const canDeleteFromSpace = role === SharedSpaceRole.Owner || role === SharedSpaceRole.Contributor;
+    const canWrite = canWriteSpace(role);
+    const canDeleteFromSpace = canTrashSpaceAssets(role);
     commandContextManager.setSpace({
       id: space.id,
       name: space.name,

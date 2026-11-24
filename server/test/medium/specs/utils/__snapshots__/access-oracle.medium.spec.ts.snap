@@ -914,6 +914,8 @@ exports[`checkAccess oracle > sharedSpaceAsset.delete 1`] = `{}`;
 
 exports[`checkAccess oracle > sharedSpaceAsset.read 1`] = `{}`;
 
+exports[`checkAccess oracle > sharedSpaceAsset.trash 1`] = `{}`;
+
 exports[`checkAccess oracle > sharedSpaceLibrary.create 1`] = `{}`;
 
 exports[`checkAccess oracle > sharedSpaceLibrary.delete 1`] = `{}`;

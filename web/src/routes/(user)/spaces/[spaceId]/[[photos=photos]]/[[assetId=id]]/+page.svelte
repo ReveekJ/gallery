@@ -17,6 +17,7 @@
   import { TimelineManager } from '#lib/managers/timeline-manager/timeline-manager.svelte.ts';
   import { Route } from '#lib/route.ts';
   import { handleError } from '#lib/utils/handle-error.ts';
+  import { canTrashSpaceAssets, canWriteSpace } from '#lib/utils/space-utils.ts';
   import {
     AssetVisibility,
     SharedSpaceRole,
@@ -77,14 +78,8 @@
 
   const currentMember = $derived(members.find((m) => m.userId === authManager.user.id));
   const isOwner = $derived(currentMember?.role === SharedSpaceRole.Owner);
-  const isEditor = $derived(
-    currentMember?.role === SharedSpaceRole.Owner ||
-      currentMember?.role === SharedSpaceRole.Contributor ||
-      currentMember?.role === SharedSpaceRole.Editor,
-  );
-  const canDeleteFromSpace = $derived(
-    currentMember?.role === SharedSpaceRole.Owner || currentMember?.role === SharedSpaceRole.Contributor,
-  );
+  const isEditor = $derived(canWriteSpace(currentMember?.role));
+  const canDeleteFromSpace = $derived(canTrashSpaceAssets(currentMember?.role));
 
   registerSpaceContext(
     () => space,

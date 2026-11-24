@@ -123,7 +123,10 @@ class SpaceMembersPage extends HookConsumerWidget {
                   padding: const EdgeInsets.all(16),
                   child: Text(member.name, style: context.textTheme.titleMedium),
                 ),
-                if (canChangeRoles && member.role != SharedSpaceRole.owner && member.userId != currentUser?.id) ...[
+                if (canChangeRoles &&
+                    member.role != SharedSpaceRole.owner &&
+                    (isOwner || member.role != SharedSpaceRole.contributor) &&
+                    member.userId != currentUser?.id) ...[
                   ListTile(
                     leading: const Icon(Icons.edit_outlined),
                     title: Text(ctx.t.role_editor),
@@ -133,15 +136,16 @@ class SpaceMembersPage extends HookConsumerWidget {
                       unawaited(updateRole(member, SharedSpaceRole.editor));
                     },
                   ),
-                  ListTile(
-                    leading: const Icon(Icons.upload_outlined),
-                    title: Text(ctx.t.role_contributor),
-                    trailing: member.role == SharedSpaceRole.contributor ? const Icon(Icons.check) : null,
-                    onTap: () {
-                      Navigator.of(ctx).pop();
-                      unawaited(updateRole(member, SharedSpaceRole.contributor));
-                    },
-                  ),
+                  if (isOwner)
+                    ListTile(
+                      leading: const Icon(Icons.upload_outlined),
+                      title: Text(ctx.t.role_contributor),
+                      trailing: member.role == SharedSpaceRole.contributor ? const Icon(Icons.check) : null,
+                      onTap: () {
+                        Navigator.of(ctx).pop();
+                        unawaited(updateRole(member, SharedSpaceRole.contributor));
+                      },
+                    ),
                   ListTile(
                     leading: const Icon(Icons.visibility_outlined),
                     title: Text(ctx.t.role_viewer),
@@ -232,7 +236,10 @@ class SpaceMembersPage extends HookConsumerWidget {
                   visualDensity: VisualDensity.compact,
                 ),
                 onTap:
-                    (canChangeRoles && member.role != SharedSpaceRole.owner && member.userId != currentUser?.id) ||
+                    (canChangeRoles &&
+                        member.role != SharedSpaceRole.owner &&
+                        (isOwner || member.role != SharedSpaceRole.contributor) &&
+                        member.userId != currentUser?.id) ||
                         (isOwner && member.role != SharedSpaceRole.owner) ||
                         (!isOwner && member.userId == currentUser?.id)
                     ? () => showMemberActions(member, isOwner, canChangeRoles)

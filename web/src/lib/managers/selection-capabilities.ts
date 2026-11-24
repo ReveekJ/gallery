@@ -94,7 +94,7 @@ export function getSelectionCapabilities(ctx: CommandContext, tagsEnabled: boole
   }
 
   const canRemoveFromSpace = isDirectSpace && space !== null && space.canWrite;
-  const canTrashFromSpace = isDirectSpace && space !== null && space.canDeleteFromSpace;
+  const canTrashFromSpace = space?.canDeleteFromSpace ?? false;
 
   // A space Owner/Editor is the one role that can act on assets they do not own: the server's
   // #764 contribution path (album.service.tryContributeDeniedAssets) accepts them into any album

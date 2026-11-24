@@ -1,6 +1,7 @@
 import { type ExpressionBuilder, type Kysely, type ReferenceExpression } from 'kysely';
 import { ChunkedSet, DummyValue, GenerateSql } from 'src/decorators.js';
-import { AssetVisibility, SharedSpaceRole } from 'src/enum.js';
+import { AssetVisibility, spaceWriterRoles } from 'src/enum.js';
+import { trashedThroughSpaceBy } from 'src/gallery/utils/space-trash.js';
 import { DB } from 'src/schema/index.js';
 import { withDefaultVisibility } from 'src/utils/database.js';
 import {
@@ -34,7 +35,7 @@ export class SpaceAlbumAccess {
       .where('album.id', 'in', [...albumIds])
       .where('album.deletedAt', 'is', null)
       .where('shared_space_member.userId', '=', userId)
-      .where('shared_space_member.role', 'in', [SharedSpaceRole.Owner, SharedSpaceRole.Editor])
+      .where('shared_space_member.role', 'in', spaceWriterRoles)
       .execute()
       .then((albums) => new Set(albums.map((album) => album.id)));
   }
@@ -62,6 +63,21 @@ export class SpaceAlbumAccess {
 
 export class SpaceAssetAccess {
   constructor(private db: Kysely<DB>) {}
+
+  @ChunkedSet({ paramIndex: 1 })
+  async checkTrashedThroughSpaceAccess(userId: string, assetIds: Set<string>): Promise<Set<string>> {
+    if (assetIds.size === 0) {
+      return new Set();
+    }
+    const rows = await this.db
+      .selectFrom('asset')
+      .select('asset.id')
+      .where('asset.id', 'in', [...assetIds])
+      .where((eb) => trashedThroughSpaceBy(eb, userId))
+      .execute();
+
+    return new Set(rows.map(({ id }) => id));
+  }
 
   @GenerateSql({ params: [DummyValue.UUID, DummyValue.UUID_SET] })
   @ChunkedSet({ paramIndex: 1 })
@@ -266,7 +282,7 @@ export class SpaceAssetAccess {
           .where((eb) =>
             eb.or([eb('asset.id', 'in', [...assetIds]), eb('asset.livePhotoVideoId', 'in', [...assetIds])]),
           )
-          .where('shared_space_member.role', 'in', ['editor', 'owner'])
+          .where('shared_space_member.role', 'in', spaceWriterRoles)
           .where((eb) =>
             eb.exists(
               eb
@@ -292,7 +308,7 @@ export class SpaceAssetAccess {
               .where((eb) =>
                 eb.or([eb('asset.id', 'in', [...assetIds]), eb('asset.livePhotoVideoId', 'in', [...assetIds])]),
               )
-              .where('shared_space_member.role', 'in', ['editor', 'owner'])
+              .where('shared_space_member.role', 'in', spaceWriterRoles)
               .where((eb) =>
                 eb.exists(
                   eb
@@ -309,7 +325,7 @@ export class SpaceAssetAccess {
               .innerJoin('shared_space_member', (join) =>
                 join
                   .on('shared_space_member.userId', '=', userId)
-                  .on('shared_space_member.role', 'in', [SharedSpaceRole.Editor, SharedSpaceRole.Owner]),
+                  .on('shared_space_member.role', 'in', spaceWriterRoles),
               )
               .select(['asset.id', 'asset.livePhotoVideoId'])
               .where('asset.deletedAt', 'is', null)
@@ -487,7 +503,7 @@ export class GalleryPersonAccess {
                   correlateLibraryId: 'asset.libraryId',
                   scope: {
                     memberUserId: userId,
-                    memberRole: [SharedSpaceRole.Owner, SharedSpaceRole.Editor],
+                    memberRole: spaceWriterRoles,
                     spaceIdRef: 'owner_membership.spaceId' as ReferenceExpression<DB, keyof DB>,
                   },
                   albumTimelineGate: 'none',

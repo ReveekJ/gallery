@@ -1,6 +1,7 @@
 // collection-selection-utils.ts
+import { canWriteSpace } from '#lib/utils/space-utils.ts';
 import { normalizeSearchString } from '#lib/utils/string-utils.ts';
-import { SharedSpaceRole, type AlbumResponseDto, type SharedSpaceResponseDto } from '@immich/sdk';
+import { type AlbumResponseDto, type SharedSpaceResponseDto } from '@immich/sdk';
 import { t } from 'svelte-i18n';
 import { get } from 'svelte/store';
 
@@ -29,7 +30,7 @@ export const isWritableSpace = (space: SharedSpaceResponseDto, currentUserId: st
     return true;
   }
   const role = space.members?.find((member) => member.userId === currentUserId)?.role;
-  return role === SharedSpaceRole.Owner || role === SharedSpaceRole.Editor;
+  return canWriteSpace(role);
 };
 
 /**

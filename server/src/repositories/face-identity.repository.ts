@@ -3,7 +3,7 @@ import { ExpressionBuilder, Insertable, Kysely, RawBuilder, Selectable, Transact
 import { InjectKysely } from 'nestjs-kysely';
 import { DummyValue, GenerateSql } from 'src/decorators.js';
 import { PeopleResponseDto, PersonResponseDto, ScopedPersonProfileRefDto } from 'src/dtos/person.dto.js';
-import { AssetVisibility, SharedSpaceRole, SourceType, VectorIndex } from 'src/enum.js';
+import { AssetVisibility, SourceType, VectorIndex, canWriteSpace } from 'src/enum.js';
 import type { PeopleFaceStatistics } from 'src/gallery/repositories/gallery-person.repository.js';
 import {
   clearOrphanPersonIdentities,
@@ -1421,7 +1421,7 @@ export class FaceIdentityRepository {
   }
 
   private isRepairRole(role: string | null | undefined): boolean {
-    return role === SharedSpaceRole.Owner || role === SharedSpaceRole.Editor;
+    return canWriteSpace(role);
   }
 
   /**

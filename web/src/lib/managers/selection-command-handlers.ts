@@ -6,7 +6,7 @@ import type { TimelineAsset } from '#lib/managers/timeline-manager/types.ts';
 import AssetAddToCollectionModal from '#lib/modals/AssetAddToCollectionModal.svelte';
 import AssetDeleteConfirmModal from '#lib/modals/AssetDeleteConfirmModal.svelte';
 import { showDeleteModal } from '#lib/stores/preferences.store.ts';
-import type { OnUndoDelete } from '#lib/utils/actions.ts';
+import { deleteAssets, type OnUndoDelete } from '#lib/utils/actions.ts';
 import { handleError } from '#lib/utils/handle-error.ts';
 import {
   AssetVisibility,
@@ -56,7 +56,11 @@ export const canArchiveSelected = (ctx: CommandContext) => {
 
 export const canDeleteSelected = (ctx: CommandContext) => {
   const selection = getSelection(ctx);
-  return selection !== null && selection.isAllUserOwned && selection.onDelete !== undefined;
+  return (
+    selection !== null &&
+    (selection.isAllUserOwned || ctx.space?.canDeleteFromSpace === true) &&
+    selection.onDelete !== undefined
+  );
 };
 
 export function handleAddSelectedToAlbum(ctx?: CommandContext) {
@@ -138,8 +142,25 @@ export async function handleArchiveSelected(ctx?: CommandContext) {
 
 export async function handleDeleteSelected(ctx?: CommandContext) {
   const selection = getSelection(ctx);
-  if (!selection || !selection.isAllUserOwned || !selection.onDelete) {
+  if (!ctx || !selection?.onDelete || !canDeleteSelected(ctx)) {
     return false;
+  }
+
+  if (ctx.space?.canDeleteFromSpace) {
+    const notify = selection.onDelete;
+    let deleted = false;
+    await deleteAssets(
+      false,
+      (ids) => {
+        notify(ids);
+        selection.clearSelection();
+        deleted = true;
+      },
+      selection.assets,
+      undefined,
+      ctx.space.id,
+    );
+    return deleted;
   }
 
   const assets = selection.ownedAssets;

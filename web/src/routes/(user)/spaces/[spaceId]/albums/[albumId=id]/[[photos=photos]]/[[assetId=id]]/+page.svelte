@@ -32,10 +32,10 @@
   import { buildAlbumAssetPickerOptions, buildSpaceAlbumAssetPickerOptions } from '#lib/utils/album-filter-options.ts';
   import { handleError } from '#lib/utils/handle-error.ts';
   import { isSpaceAlbumRoute } from '#lib/utils/navigation.ts';
+  import { canTrashSpaceAssets, canWriteSpace } from '#lib/utils/space-utils.ts';
   import { getTimelineManagerTimeBuckets } from '#lib/utils/timeline-zoom-navigation.ts';
   import {
     AlbumUserRole,
-    SharedSpaceRole,
     updateAlbumInfo,
     type AlbumResponseDto,
     type SharedSpaceMemberResponseDto,
@@ -101,9 +101,8 @@
   const picker = createAlbumPickerFilters();
 
   const currentMember = $derived(members.find((m) => m.userId === authManager.user.id));
-  const isSpaceEditor = $derived(
-    currentMember?.role === SharedSpaceRole.Owner || currentMember?.role === SharedSpaceRole.Editor,
-  );
+  const canDeleteFromSpace = $derived(canTrashSpaceAssets(currentMember?.role));
+  const isSpaceEditor = $derived(canWriteSpace(currentMember?.role));
   const isAlbumEditor = $derived(
     album.albumUsers.some(
       (au) =>
@@ -466,7 +465,7 @@
     timelineManager={filtered.showSearchResults ? undefined : timelineManager}
     assetInteraction={assetMultiSelectManager}
     {album}
-    space={{ id: space.id, canWrite: isSpaceEditor, members }}
+    space={{ id: space.id, canWrite: isSpaceEditor, canDeleteFromSpace, members }}
     downloadFilename={`${album.albumName}.zip`}
     onSelectAll={filtered.onSelectAll}
     onRemove={handleRemoveAssets}

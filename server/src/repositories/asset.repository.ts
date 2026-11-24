@@ -143,6 +143,7 @@ interface AssetBuilderOptions {
 }
 
 export interface TimeBucketOptions extends AssetBuilderOptions, LibraryViewOptions {
+  spaceTrashActorId?: string;
   order?: AssetOrder;
   orderBy?: AssetOrderBy;
   bucketSize?: TimeBucketSize;

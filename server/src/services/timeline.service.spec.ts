@@ -465,7 +465,7 @@ describe(TimelineService.name, () => {
       await sut.getTimeBuckets(sharedLinkAuth(spaceId), { albumId });
 
       expect(mocks.sharedSpace.getMemberSpaceIdsLinkingAlbum).toHaveBeenCalledWith(albumId, expect.any(String), {
-        roles: [SharedSpaceRole.Owner, SharedSpaceRole.Editor],
+        roles: [SharedSpaceRole.Owner, SharedSpaceRole.Contributor, SharedSpaceRole.Editor],
       });
     });
 

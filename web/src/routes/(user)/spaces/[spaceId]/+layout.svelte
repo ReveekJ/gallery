@@ -12,6 +12,7 @@
   import { Route } from '#lib/route.ts';
   import { handleError } from '#lib/utils/handle-error.ts';
   import { getSearchablePageState } from '#lib/utils/searchable-page-search.ts';
+  import { canWriteSpace } from '#lib/utils/space-utils.ts';
   import {
     SharedSpaceRole,
     UserAvatarColor,
@@ -56,9 +57,7 @@
 
   const currentMember = $derived(members.find((m) => m.userId === authManager.user.id));
   const isOwner = $derived(currentMember?.role === SharedSpaceRole.Owner);
-  const isEditor = $derived(
-    currentMember?.role === SharedSpaceRole.Owner || currentMember?.role === SharedSpaceRole.Editor,
-  );
+  const isEditor = $derived(canWriteSpace(currentMember?.role));
   const showInTimeline = $derived(currentMember?.showInTimeline ?? true);
   const sharePersonMetadata = $derived(currentMember?.sharePersonMetadata ?? true);
 

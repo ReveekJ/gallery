@@ -23,6 +23,7 @@
   import { peopleFilterToTypeParam as filterToTypeParam, resolvePeopleFilterBy } from '#lib/utils/people-filter.ts';
   import { formatPeopleHeaderDescription } from '#lib/utils/people-statistics.ts';
   import { appendUniqueById, sortPeople } from '#lib/utils/people-utils.ts';
+  import { canWriteSpace } from '#lib/utils/space-utils.ts';
   import {
     SharedSpaceRole,
     getSpacePeople,
@@ -186,7 +187,7 @@
 
   const currentMember = $derived(members.find((m) => m.userId === authManager.user.id));
   const isOwner = $derived(currentMember?.role === SharedSpaceRole.Owner);
-  const isEditor = $derived(isOwner || currentMember?.role === SharedSpaceRole.Editor);
+  const isEditor = $derived(canWriteSpace(currentMember?.role));
   const canManageVisibility = $derived(isEditor && hasSpacePeople);
 
   onMount(() => {

@@ -4,10 +4,10 @@ import { getSpaceProfile } from '#lib/utils/global-person-route.ts';
 import { handleError } from '#lib/utils/handle-error.ts';
 import { getFormatter } from '#lib/utils/i18n.ts';
 import { getPersonFaceThumbnailUrl, getSpacePersonFaceThumbnailUrl } from '#lib/utils/people-utils.ts';
+import { canWriteSpace } from '#lib/utils/space-utils.ts';
 import {
   PersonType,
   ScopedPersonProfileType,
-  SharedSpaceRole,
   detachScopedPerson,
   getPersonFaces,
   getSpacePersonFaces,
@@ -35,7 +35,7 @@ export const isSpaceEditor = (spaces: SharedSpaceResponseDto[] | undefined, spac
     return true;
   }
   const role = space.members?.find((member) => member.userId === userId)?.role;
-  return role === SharedSpaceRole.Owner || role === SharedSpaceRole.Editor;
+  return canWriteSpace(role);
 };
 
 export const updatePersonVisibility = async (

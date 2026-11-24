@@ -53,7 +53,6 @@ import {
   SharedSpaceUpdateDto,
 } from 'src/dtos/shared-space.dto.js';
 import {
-  AssetStatus,
   AssetType,
   AssetVisibility,
   CacheControl,
@@ -595,6 +594,9 @@ export class SharedSpaceService extends BaseService {
       if (dto.role === SharedSpaceRole.Owner) {
         throw new ForbiddenException('Only an owner can add an owner');
       }
+      if (dto.role === SharedSpaceRole.Contributor) {
+        throw new ForbiddenException('Only an owner can add a contributor');
+      }
       if (dto.role === SharedSpaceRole.Editor && !management.canChangeRoles) {
         throw new ForbiddenException('Not allowed to add an editor');
       }
@@ -663,13 +665,15 @@ export class SharedSpaceService extends BaseService {
       throw new BadRequestException('Member not found');
     }
 
-    // Editors manage only viewers and editors: they can neither touch an owner nor make one.
     if (!callerIsOwner) {
       if (existingMember.role === SharedSpaceRole.Owner) {
         throw new ForbiddenException("Cannot change an owner's role");
       }
       if (dto.role === SharedSpaceRole.Owner) {
         throw new ForbiddenException('Only an owner can add an owner');
+      }
+      if (existingMember.role === SharedSpaceRole.Contributor || dto.role === SharedSpaceRole.Contributor) {
+        throw new ForbiddenException('Only an owner can manage contributor roles');
       }
     }
 
@@ -1668,17 +1672,14 @@ export class SharedSpaceService extends BaseService {
   async trashAssets(auth: AuthDto, spaceId: string, dto: SharedSpaceAssetTrashDto): Promise<void> {
     await this.requireRole(auth, spaceId, SharedSpaceRole.Contributor);
 
-    const spaceAssets = await this.sharedSpaceRepository.getAssetIdsInSpace(spaceId);
-    const visibleAssetIds = new Set(spaceAssets.map(({ assetId }) => assetId));
     const assetIds = [...new Set(dto.assetIds)];
-    if (assetIds.some((assetId) => !visibleAssetIds.has(assetId))) {
+    if (assetIds.length === 0) {
+      return;
+    }
+    if (!(await this.sharedSpaceRepository.trashSpaceAssets(spaceId, auth.user.id, assetIds))) {
       throw new BadRequestException('One or more assets are not visible in this space');
     }
 
-    await this.assetRepository.updateAll(assetIds, {
-      deletedAt: new Date(),
-      status: AssetStatus.Trashed,
-    });
     await this.eventRepository.emit('AssetTrashAll', {
       assetIds,
       userId: auth.user.id,

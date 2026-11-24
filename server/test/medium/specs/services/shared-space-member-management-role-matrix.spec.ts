@@ -60,11 +60,12 @@ beforeAll(async () => {
 /** Every SharedSpaceRole maps to the actor fixture that holds it; a new role fails the coverage test below. */
 const ACTOR_FOR_ROLE: Record<string, Actor> = {
   [SharedSpaceRole.Owner]: 'creator',
+  [SharedSpaceRole.Contributor]: 'contributor',
   [SharedSpaceRole.Editor]: 'editor',
   [SharedSpaceRole.Viewer]: 'viewer',
 };
 const EXTRA_ACTORS = ['co-owner', 'non-member', 'non-member-admin'] as const;
-type Actor = 'creator' | 'editor' | 'viewer' | (typeof EXTRA_ACTORS)[number];
+type Actor = 'creator' | 'contributor' | 'editor' | 'viewer' | (typeof EXTRA_ACTORS)[number];
 const ACTORS: Actor[] = [...Object.values(SharedSpaceRole).map((role) => ACTOR_FOR_ROLE[role]), ...EXTRA_ACTORS];
 
 type Tri = boolean | null;
@@ -83,18 +84,21 @@ viewer (that case is covered by the explicit `self` target instead).
 const BASELINE: Array<{ fixture: Fixture; role: SharedSpaceRole }> = [
   { fixture: 'creator', role: SharedSpaceRole.Owner },
   { fixture: 'co-owner', role: SharedSpaceRole.Owner },
+  { fixture: 'contributor', role: SharedSpaceRole.Contributor },
+  { fixture: 'target-contributor', role: SharedSpaceRole.Contributor },
   { fixture: 'editor', role: SharedSpaceRole.Editor },
   { fixture: 'viewer', role: SharedSpaceRole.Viewer },
   { fixture: 'target-editor', role: SharedSpaceRole.Editor },
   { fixture: 'target-viewer', role: SharedSpaceRole.Viewer },
 ];
-type Fixture = Actor | 'target-editor' | 'target-viewer' | 'target-non-member';
+type Fixture = Actor | 'target-contributor' | 'target-editor' | 'target-viewer' | 'target-non-member';
 
-type UpdateTarget = 'creator' | 'co-owner' | 'editor' | 'viewer' | 'self';
-const UPDATE_TARGETS: UpdateTarget[] = ['creator', 'co-owner', 'editor', 'viewer', 'self'];
+type UpdateTarget = 'creator' | 'co-owner' | 'contributor' | 'editor' | 'viewer' | 'self';
+const UPDATE_TARGETS: UpdateTarget[] = ['creator', 'co-owner', 'contributor', 'editor', 'viewer', 'self'];
 const UPDATE_TARGET_FIXTURE: Record<Exclude<UpdateTarget, 'self'>, Fixture> = {
   creator: 'creator',
   'co-owner': 'co-owner',
+  contributor: 'target-contributor',
   editor: 'target-editor',
   viewer: 'target-viewer',
 };
@@ -170,6 +174,9 @@ const roleOf = (actor: Actor): SharedSpaceRole | undefined => {
     case 'co-owner': {
       return SharedSpaceRole.Owner;
     }
+    case 'contributor': {
+      return SharedSpaceRole.Contributor;
+    }
     case 'editor': {
       return SharedSpaceRole.Editor;
     }
@@ -189,7 +196,7 @@ const effective = (actor: Actor, s: Settings) => {
   if (role === SharedSpaceRole.Owner) {
     return { add: true, change: true };
   }
-  if (role === SharedSpaceRole.Editor) {
+  if (role === SharedSpaceRole.Editor || role === SharedSpaceRole.Contributor) {
     return { add: s.spaceAdd ?? s.serverAdd, change: s.spaceChange ?? s.serverChange };
   }
   return { add: false, change: false };
@@ -198,7 +205,7 @@ const effective = (actor: Actor, s: Settings) => {
 const expectedOutcome = (actor: Actor, s: Settings, op: Op): Expected => {
   const role = roleOf(actor);
   const isOwner = role === SharedSpaceRole.Owner;
-  const isEditor = role === SharedSpaceRole.Editor;
+  const isEditor = role === SharedSpaceRole.Editor || role === SharedSpaceRole.Contributor;
   const { add, change } = effective(actor, s);
   const deny = { outcome: 403 } as const;
   const badRequest = { outcome: 400 } as const;
@@ -214,7 +221,7 @@ const expectedOutcome = (actor: Actor, s: Settings, op: Op): Expected => {
         if (!add) {
           return deny;
         }
-        if (op.role === SharedSpaceRole.Owner) {
+        if (op.role === SharedSpaceRole.Owner || op.role === SharedSpaceRole.Contributor) {
           return deny;
         }
         if (op.role === SharedSpaceRole.Editor && !change) {
@@ -244,10 +251,10 @@ const expectedOutcome = (actor: Actor, s: Settings, op: Op): Expected => {
       const targetRole = BASELINE.find((m) => m.fixture === targetFixture)!.role;
       if (isEditor) {
         // Editors never change an owner's role, and never make an owner.
-        if (targetRole === SharedSpaceRole.Owner) {
+        if (targetRole === SharedSpaceRole.Owner || targetRole === SharedSpaceRole.Contributor) {
           return deny;
         }
-        if (op.role === SharedSpaceRole.Owner) {
+        if (op.role === SharedSpaceRole.Owner || op.role === SharedSpaceRole.Contributor) {
           return deny;
         }
       }
@@ -322,7 +329,7 @@ const SPACE_NAME = 'Matrix space';
 
 const buildWorld = async (ctx: MediumTestContext) => {
   const users = {} as Record<Fixture, User>;
-  const fixtures: Fixture[] = [...ACTORS, 'target-editor', 'target-viewer', 'target-non-member'];
+  const fixtures: Fixture[] = [...ACTORS, 'target-contributor', 'target-editor', 'target-viewer', 'target-non-member'];
   for (const fixture of fixtures) {
     const { user } = await ctx.newUser({ isAdmin: fixture === 'non-member-admin' });
     users[fixture] = { id: user.id, email: user.email, isAdmin: user.isAdmin };

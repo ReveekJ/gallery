@@ -2,6 +2,7 @@
   import { initInput } from '#lib/actions/focus.ts';
   import { authManager } from '#lib/managers/auth-manager.svelte.ts';
   import { handleError } from '#lib/utils/handle-error.ts';
+  import { canWriteSpace, spaceRoleLabelKey } from '#lib/utils/space-utils.ts';
   import { SharedSpaceRole, UserAvatarColor, getAllSpaces, type SharedSpaceResponseDto } from '@immich/sdk';
   import { Icon, Modal, ModalBody } from '@immich/ui';
   import { mdiAccountGroup } from '@mdi/js';
@@ -77,12 +78,12 @@
 
   const canWrite = (space: SharedSpaceResponseDto) => {
     const role = getCurrentUserRole(space);
-    return role === SharedSpaceRole.Owner || role === SharedSpaceRole.Editor;
+    return canWriteSpace(role);
   };
 
   const getRoleLabel = (space: SharedSpaceResponseDto) => {
     const role = getCurrentUserRole(space);
-    return role === SharedSpaceRole.Editor ? $t('role_editor') : $t('owner');
+    return $t(spaceRoleLabelKey(role ?? ''));
   };
 
   const handleKeydown = (event: KeyboardEvent) => {

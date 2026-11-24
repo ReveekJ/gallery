@@ -4,15 +4,18 @@ import { InjectKysely } from 'nestjs-kysely';
 import { ChunkedArray, ChunkedSet, DummyValue, GenerateSql } from 'src/decorators.js';
 import {
   AlbumUserRole,
+  AssetStatus,
   AssetType,
   AssetVisibility,
   SharedSpaceActivityType,
   SharedSpaceRole,
   SourceType,
   VectorIndex,
+  spaceWriterRoles,
 } from 'src/enum.js';
 import type { PeopleFaceStatistics } from 'src/gallery/repositories/gallery-person.repository.js';
 import { personIdentityId, personIsPet, personSpecies, personType } from 'src/gallery/utils/person-sidecar.js';
+import { spaceTrashRoles, visibleForSpaceTrash } from 'src/gallery/utils/space-trash.js';
 import { probes } from 'src/repositories/database.repository.js';
 import type { AssetSearchBuilderOptions } from 'src/repositories/search.repository.js';
 import { DB } from 'src/schema/index.js';
@@ -403,10 +406,7 @@ export class SharedSpaceRepository {
     return this.db
       .selectFrom('shared_space_album as link')
       .innerJoin('shared_space_member as m', (join) =>
-        join
-          .onRef('m.spaceId', '=', 'link.spaceId')
-          .on('m.userId', '=', userId)
-          .on('m.role', 'in', [SharedSpaceRole.Owner, SharedSpaceRole.Editor]),
+        join.onRef('m.spaceId', '=', 'link.spaceId').on('m.userId', '=', userId).on('m.role', 'in', spaceWriterRoles),
       )
       .innerJoin(
         'asset',
@@ -808,7 +808,7 @@ export class SharedSpaceRepository {
       .select('shared_space_asset.spaceId')
       .where('shared_space_asset.assetId', 'in', [...assetIds])
       .where('shared_space_member.userId', '=', userId)
-      .where('shared_space_member.role', 'in', [SharedSpaceRole.Owner, SharedSpaceRole.Editor])
+      .where('shared_space_member.role', 'in', spaceWriterRoles)
       .distinct()
       .execute();
 
@@ -827,6 +827,68 @@ export class SharedSpaceRepository {
       .returning('assetId')
       .execute();
     return rows.map((r) => r.assetId);
+  }
+
+  async trashSpaceAssets(spaceId: string, userId: string, assetIds: string[]): Promise<boolean> {
+    if (assetIds.length === 0) {
+      return true;
+    }
+    return this.db.transaction().execute(async (trx) => {
+      const member = await trx
+        .selectFrom('shared_space_member')
+        .select('role')
+        .where('spaceId', '=', spaceId)
+        .where('userId', '=', userId)
+        .where('role', 'in', spaceTrashRoles)
+        .forShare()
+        .executeTakeFirst();
+      if (!member) {
+        return false;
+      }
+
+      const rows = await trx
+        .selectFrom('asset')
+        .select('asset.id')
+        .where('asset.id', '=', anyUuid(assetIds))
+        .where((eb) => visibleForSpaceTrash(eb, spaceId))
+        .orderBy('asset.id')
+        .forUpdate()
+        .execute();
+      if (rows.length !== assetIds.length) {
+        return false;
+      }
+
+      await trx
+        .updateTable('asset')
+        .set({ deletedAt: sql<Date>`clock_timestamp()`, status: AssetStatus.Trashed })
+        .where('id', '=', anyUuid(assetIds))
+        .execute();
+      await trx
+        .insertInto('shared_space_trash')
+        .columns(['assetId', 'spaceId', 'userId', 'deletedAt'])
+        .expression((eb) =>
+          eb
+            .selectFrom('asset')
+            .select([
+              'asset.id as assetId',
+              sql<string>`${spaceId}::uuid`.as('spaceId'),
+              sql<string>`${userId}::uuid`.as('userId'),
+              'asset.deletedAt',
+            ])
+            .where('asset.id', '=', anyUuid(assetIds))
+            .$narrowType<{ deletedAt: NotNull }>(),
+        )
+        .onConflict((conflict) =>
+          conflict.column('assetId').doUpdateSet((eb) => ({
+            spaceId: eb.ref('excluded.spaceId'),
+            userId: eb.ref('excluded.userId'),
+            deletedAt: eb.ref('excluded.deletedAt'),
+          })),
+        )
+        .execute();
+
+      return true;
+    });
   }
 
   /**

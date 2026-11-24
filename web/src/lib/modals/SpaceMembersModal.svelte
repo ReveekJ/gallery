@@ -115,11 +115,12 @@
         </div>
         {#if member.role === 'owner'}
           <RoleBadge role="owner" {spaceColor} />
-        {:else if canChangeRoles && member.userId !== currentUserId}
+        {:else if canChangeRoles && (isOwner || member.role !== SharedSpaceRole.Contributor) && member.userId !== currentUserId}
           <Field class="w-32 shrink-0">
             <Select
               value={member.role as string as SharedSpaceRole}
               options={[
+                ...(isOwner ? [{ label: $t('role_contributor'), value: SharedSpaceRole.Contributor }] : []),
                 { label: $t('role_editor'), value: SharedSpaceRole.Editor },
                 { label: $t('role_viewer'), value: SharedSpaceRole.Viewer },
                 ...(isOwner ? [{ label: $t('remove'), value: 'remove' }] : []),

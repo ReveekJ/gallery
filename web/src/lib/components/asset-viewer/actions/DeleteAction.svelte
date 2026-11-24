@@ -1,5 +1,6 @@
 <script lang="ts">
   import { shortcuts } from '#lib/actions/shortcut.ts';
+  import type { OnAction, PreAction } from '#lib/components/asset-viewer/actions/action.ts';
   import { AssetAction } from '#lib/constants.ts';
   import { featureFlagsManager } from '#lib/managers/feature-flags-manager.svelte.ts';
   import AssetDeleteConfirmModal from '#lib/modals/AssetDeleteConfirmModal.svelte';
@@ -11,21 +12,38 @@
   import { IconButton, modalManager, toastManager } from '@immich/ui';
   import { mdiDeleteForeverOutline, mdiDeleteOutline } from '@mdi/js';
   import { t } from 'svelte-i18n';
-  import type { OnAction, PreAction } from './action';
 
   interface Props {
     asset: AssetResponseDto;
     onAction: OnAction;
     preAction: PreAction;
     onUndoDelete?: OnUndoDelete;
+    trashSpaceId?: string;
   }
 
-  let { asset, onAction, preAction, onUndoDelete = undefined }: Props = $props();
+  let { asset, onAction, preAction, onUndoDelete, trashSpaceId }: Props = $props();
 
-  const forceDefault = $derived(asset.isTrashed || !featureFlagsManager.value.trash);
+  const forceDefault = $derived(!trashSpaceId && (asset.isTrashed || !featureFlagsManager.value.trash));
 
   const trashOrDelete = async (forceRequest?: boolean) => {
     const timelineAsset = toTimelineAsset(asset);
+    if (trashSpaceId) {
+      if (!forceRequest) {
+        await deleteAssetsUtil(
+          false,
+          () => {
+            const action = { type: AssetAction.TRASH, asset: timelineAsset } as const;
+            onAction(action);
+            preAction(action);
+          },
+          [timelineAsset],
+          undefined,
+          trashSpaceId,
+        );
+      }
+      return;
+    }
+
     const force = forceDefault || forceRequest;
 
     if (force) {

@@ -14,6 +14,7 @@
   import SelectAllAssets from '#lib/components/timeline/actions/SelectAllAction.svelte';
   import SetVisibilityAction from '#lib/components/timeline/actions/SetVisibilityAction.svelte';
   import ArchiveAction from '#lib/gallery/actions/ArchiveAction.svelte';
+  import { useEditableSelection } from '#lib/gallery/asset-viewer/editable-selection.svelte.ts';
   import AlbumStackBulkActions from '#lib/gallery/stack/AlbumStackBulkActions.svelte';
   import type { AssetMultiSelectManager } from '#lib/managers/asset-multi-select-manager.svelte.ts';
   import { authManager } from '#lib/managers/auth-manager.svelte.ts';
@@ -27,7 +28,6 @@
   import { TimelineManager } from '#lib/managers/timeline-manager/timeline-manager.svelte.ts';
   import { getAssetBulkActions } from '#lib/services/asset.service.ts';
   import type { OnArchive, OnDelete, OnFavorite, OnSetVisibility, OnUndoDelete } from '#lib/utils/actions.ts';
-  import { resolveEditableAssetIds } from '#lib/utils/asset-editability.ts';
   import {
     AlbumUserRole,
     type AlbumResponseDto,
@@ -143,48 +143,14 @@
     };
   });
 
-  // #734: which of the selection the caller may edit. `undefined` means unresolved — the
-  // canEditMetadata-gated actions below stay hidden until it resolves, rather than popping in
-  // late (there's no `disabled` affordance on MenuOption to render a pending state instead).
-  // An all-owned selection resolves synchronously, without a request.
-  let editableSelectedAssetIds = $state<string[] | undefined>(undefined);
-
-  $effect(() => {
-    const assets = assetInteraction.assets;
-    const isAllUserOwned = assetInteraction.isAllUserOwned;
-    const uid = currentUserId;
-    const spaceForFallback = space ? { canWrite: space.canWrite, members: space.members ?? [] } : null;
-
-    if (assets.length === 0) {
-      editableSelectedAssetIds = undefined;
-      return;
-    }
-
-    if (isAllUserOwned) {
-      editableSelectedAssetIds = assets.map((asset) => asset.id);
-      return;
-    }
-
-    // A new (non-all-owned) selection is unresolved until the debounced request lands, or the
-    // request rejects and the canEditAsset fallback runs.
-    editableSelectedAssetIds = undefined;
-    const requestedIds = assets.map((asset) => asset.id);
-
-    const timeoutId = setTimeout(() => {
-      void resolveEditableAssetIds(assets, { userId: uid ?? undefined, space: spaceForFallback }).then((ids) => {
-        // W-14: the selection may have changed while the request was in flight — apply the
-        // response only if it hasn't.
-        const currentIds = new Set(assetInteraction.assets.map((asset) => asset.id));
-        const selectionUnchanged =
-          currentIds.size === requestedIds.length && requestedIds.every((id) => currentIds.has(id));
-        if (selectionUnchanged) {
-          editableSelectedAssetIds = ids;
-        }
-      });
-    }, 250);
-
-    return () => clearTimeout(timeoutId);
-  });
+  const editableSelection = useEditableSelection(
+    () => assetInteraction,
+    () => ({
+      userId: currentUserId ?? undefined,
+      space: space ? { canWrite: space.canWrite, members: space.members ?? [] } : null,
+    }),
+  );
+  const editableSelectedAssetIds = $derived(editableSelection.ids);
 
   const selectionCtx = $derived.by((): SelectionCommandContext | null => {
     if (!assetInteraction.selectionActive) {
@@ -297,7 +263,7 @@
         <DeleteAssets menuItem {onAssetDelete} {onUndoDelete} />
       {/if}
       {#if caps.canTrashFromSpace && space && onAssetDelete}
-        <DeleteAssets menuItem spaceId={space.id} {onAssetDelete} {onUndoDelete} />
+        <DeleteAssets menuItem spaceId={space.id} {onAssetDelete} />
       {/if}
     </ButtonContextMenu>
   </AssetSelectControlBar>

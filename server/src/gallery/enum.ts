@@ -8,6 +8,11 @@ export enum SharedSpaceRole {
   Viewer = 'viewer',
 }
 
+export const spaceWriterRoles = [SharedSpaceRole.Owner, SharedSpaceRole.Contributor, SharedSpaceRole.Editor];
+
+export const canWriteSpace = (role: string | null | undefined): boolean =>
+  spaceWriterRoles.some((writer) => writer === role);
+
 export enum SharedSpaceActivityType {
   AssetAdd = 'asset_add',
   AssetRemove = 'asset_remove',

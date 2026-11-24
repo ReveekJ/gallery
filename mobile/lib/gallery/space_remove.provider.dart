@@ -34,7 +34,7 @@ FROM paths p
 INNER JOIN shared_space_entity s ON s.id = p.space_id
 WHERE s.created_by_id = ?1 OR EXISTS (
   SELECT 1 FROM shared_space_member_entity m
-  WHERE m.space_id = s.id AND m.user_id = ?1 AND m.role IN ('owner', 'editor')
+  WHERE m.space_id = s.id AND m.user_id = ?1 AND m.role IN ('owner', 'contributor', 'editor')
 )
 ''';
 

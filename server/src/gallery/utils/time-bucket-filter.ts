@@ -3,6 +3,7 @@ import { AssetStatus, TimeBucketSize } from 'src/enum.js';
 import { withAlbumStackCollapse } from 'src/gallery/utils/album-stack-collapse.js';
 import { withOwnArchiveOnly } from 'src/gallery/utils/favorites-scope.js';
 import { withLibraryView } from 'src/gallery/utils/library-view.js';
+import { trashedThroughSpaceBy } from 'src/gallery/utils/space-trash.js';
 import { getBoundingCircle, withBoundingBox, type TimeBucketOptions } from 'src/repositories/asset.repository.js';
 import { DB } from 'src/schema/index.js';
 import { withAssetFilter } from 'src/utils/asset-filter.js';
@@ -241,6 +242,10 @@ export function withTimeBucketAssetFilters<O>(
               ? { kind: 'sibling-arm' }
               : { kind: 'inline', visibleSpaceIds: options.visibleSpaceIds ?? [], viewerId: viewer },
           );
+          if (options.isTrashed && options.spaceTrashActorId) {
+            return eb.or([ownerArm, trashedThroughSpaceBy(eb, options.spaceTrashActorId)]);
+          }
+
           return ownedOrSharedWithViewer(
             eb,
             options.personIds?.length && viewerId ? eb.or([ownerArm, inSharedAlbum(viewerId, 'asset.id')]) : ownerArm,
